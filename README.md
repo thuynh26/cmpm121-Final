@@ -35,7 +35,7 @@ Our Outlook will be a
 - What do you anticipate being the hardest or riskiest part of the project?
 - What are you hoping to learn by approaching the project with the tools and materials you selected above?
 
-# Devlog Entry - 11/14/2025
+# Devlog Entry - 11/20/2025
 
 ## Progress Notes
 *from collabarative session at noon with Joshua & Elijah*
