@@ -34,3 +34,12 @@ Our Outlook will be a
 
 - What do you anticipate being the hardest or riskiest part of the project?
 - What are you hoping to learn by approaching the project with the tools and materials you selected above?
+
+# Devlog Entry - 11/14/2025
+
+## Progress Notes
+*from collabarative session at noon with Joshua & Elijah*
+- The repository has been initialized with all the files and libaries that we will need to start creating our game. The files that will contain most of our code are here:
+    -  `index.html`: Created this file and included a title, group member names, and a scene container for the **Three.js** canvas.
+    -  `boot.js`: Contains any imports and will also import assets in the future.
+    -  `main.js`: Created a simple scene using **Three.js** with a static camera and no objects. This can be a starting point for the team to figure out how to use **Three.js** and to continue making progress on the game.

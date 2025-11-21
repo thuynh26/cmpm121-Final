@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.181.2",
+    "ammo.js": "https://esm.sh/ammo.js@0.0.10"
+  }
+}
