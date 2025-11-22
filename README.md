@@ -28,14 +28,9 @@
 - AI can be used as an assistant to better our workflow but cannot be used to overly design, code, and structure our game. 
 
 ## Outlook
-- Give us a short section on your outlook on the project. You might cover one or more of these topics:
-Our Outlook will be a 
-- What is your team hoping to accomplish that other teams might not attempt?
+Our outlook for this project is to build a small point and click adventure game that uses 3D physics as a core puzzle mechanic. We are hoping to center the game around a pinball game with portals as our physics puzzle. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
 
-- What do you anticipate being the hardest or riskiest part of the project?
-- What are you hoping to learn by approaching the project with the tools and materials you selected above?
-
-# Devlog Entry - 11/14/2025
+# Devlog Entry - 11/20/2025
 
 ## Progress Notes
 *from collabarative session at noon with Joshua & Elijah*
