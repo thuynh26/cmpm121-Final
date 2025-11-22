@@ -1,0 +1,60 @@
+# Node modules
+node_modules/
+
+# Deno local cache
+.deno/
+
+# Build / output
+dist/
+build/
+.vite/
+.cache/
+
+# Vite dev server
+node_modules/.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Coverage and test output
+coverage/
+.nyc_output/
+
+# Misc caches
+.parcel-cache/
+.sass-cache/
+
+# Ignore local npm/yarn lock artifacts if you don't want them tracked
+# (leave uncommented if you want to version-lock dependencies)
+# package-lock.json
+# yarn.lock
+
+# Generated folders
+public/build/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Ignore dist/assets produced by builds
+dist/assets/
+
+# Keep workspace and editor storage out
+.history/
