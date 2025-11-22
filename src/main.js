@@ -87,12 +87,13 @@ export default function init() {
 
     // Initialize Ammo.js physics world
     let physicsWorld = null;
+    let dispatcher = null;
     const rigidBodies = [];
 
     if (typeof Ammo !== "undefined") {
       // Set up the physics world configuration
       const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-      const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+      dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
       const overlappingPairCache = new Ammo.btDbvtBroadphase();
       const solver = new Ammo.btSequentialImpulseConstraintSolver();
 
@@ -106,8 +107,6 @@ export default function init() {
 
       // Set gravity (x, y, z) - y is up/down
       physicsWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
-
-      console.log("Physics world created with gravity:", 0, -9.8, 0);
     }
 
     // Destructure the specific classes we need from the module for clarity.
@@ -158,7 +157,7 @@ export default function init() {
       metalness: 0.2,
     });
     const ground = new Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = 0; //-Math.PI / 2; // Rotate to be horizontal
+    ground.rotation.x = Math.PI / 2; // Rotate to be horizontal
     ground.position.y = -1;
     ground.receiveShadow = true;
     scene.add(ground);
@@ -174,7 +173,7 @@ export default function init() {
         w: 0.7071,
       }, {
         x: 20,
-        y: 0.1,
+        y: 1,
         z: 20,
       });
       rbGround.setFriction(0.5);
@@ -189,9 +188,26 @@ export default function init() {
     // Red cube
     const redCubeMaterial = new MeshStandardMaterial({ color: 0xff0000 });
     const redCube = new Mesh(cubeGeometry, redCubeMaterial);
-    redCube.position.set(-2, 0.5, 0);
     redCube.castShadow = true;
     scene.add(redCube);
+
+    if (physicsWorld) {
+      const rbredCube = new RigidBody();
+      rbredCube.createBox(10, { x: -2, y: 5, z: 0 }, {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+      }, {
+        x: 1,
+        y: 1,
+        z: 1,
+      });
+      rbredCube.setFriction(0.5);
+      rbredCube.setRestitution(0.7);
+      physicsWorld.addRigidBody(rbredCube.body_);
+      rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
+    }
 
     // Create a perspective camera. The aspect ratio is from the container's size so the view matches the canvas dimensions.
     const camera = new PerspectiveCamera(
@@ -240,7 +256,58 @@ export default function init() {
 
       // Update physics world
       if (physicsWorld) {
-        physicsWorld.stepSimulation(deltaTime, 10);
+        // Use fixed timestep for stable physics - cap deltaTime to prevent huge jumps
+        const fixedTimeStep = 1.0 / 60.0; // 60 FPS physics
+        const maxSubSteps = 10;
+        physicsWorld.stepSimulation(
+          Math.min(deltaTime, 0.1),
+          maxSubSteps,
+          fixedTimeStep,
+        );
+
+        // Check for collisions
+        const numManifolds = dispatcher.getNumManifolds();
+        for (let i = 0; i < numManifolds; i++) {
+          const contactManifold = dispatcher.getManifoldByIndexInternal(i);
+          const numContacts = contactManifold.getNumContacts();
+
+          if (numContacts > 0) {
+            const body0 = Ammo.castObject(
+              contactManifold.getBody0(),
+              Ammo.btRigidBody,
+            );
+            const body1 = Ammo.castObject(
+              contactManifold.getBody1(),
+              Ammo.btRigidBody,
+            );
+
+            // Log collision (you can add custom collision handling here)
+            for (let j = 0; j < numContacts; j++) {
+              const contactPoint = contactManifold.getContactPoint(j);
+              const distance = contactPoint.getDistance();
+
+              // Only process if objects are actually touching (distance <= 0)
+              if (distance <= 0) {
+                // Find which meshes are colliding
+                const obj0 = rigidBodies.find((rb) =>
+                  rb.rigidBody.body_ === body0
+                );
+                const obj1 = rigidBodies.find((rb) =>
+                  rb.rigidBody.body_ === body1
+                );
+
+                if (obj0 && obj1) {
+                  // You can add custom collision responses here
+                  // For example: change color, play sound, apply forces, etc.
+                  console.log(
+                    "Collision detected between objects at distance:",
+                    distance,
+                  );
+                }
+              }
+            }
+          }
+        }
 
         // Update Three.js mesh positions from physics bodies
         for (const obj of rigidBodies) {
