@@ -5,7 +5,7 @@
 .deno/
 
 # Build / output
-dist/
+# dist/
 build/
 .vite/
 .cache/
