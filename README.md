@@ -133,13 +133,5 @@ _from collabarative session at noon with Joshua & Brody & Tina_
 
 - **Ground**: Horizontal green plane (20x20) with static physics body
 - **Wall**: Vertical gray plane at z=-10, centered at y=0, aligned with collision box (20x20x1)
-- **Target**: Red 5x5 target at y=5, z=-9.9 with collision detection
-- **Victory Condition**: Message displays when sphere hits target wall
 - **Red Cube**: Dynamic object (mass=10) for testing physics interactions
 - **Lighting**: Ambient (60%) + directional light with shadows
-
-### Controls
-
-- **Right-click drag**: Look around
-- **Left-click**: Pick up sphere
-- **SPACE**: Throw held item

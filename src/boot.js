@@ -8,9 +8,23 @@ import init from "./main.js";
 globalThis.THREE = THREE;
 globalThis.PointerLockControls = PointerLockControls;
 
-// Ammo.js is already initialized in index.html before this module loads
-// Just start the app
-console.log("Starting application with Ammo.js support");
-init().catch((err) => {
-  console.error("Failed to initialize the scene:", err);
-});
+// Initialize Ammo.js first, then start the app
+// Ammo() is a function that returns a promise when the physics engine is ready
+if (typeof Ammo === "function") {
+  Ammo().then((AmmoLib) => {
+    // Expose Ammo globally so it can be used throughout the app
+    globalThis.Ammo = AmmoLib;
+    console.log("Ammo.js physics engine initialized");
+
+    // Now start the app after Ammo is ready
+    return init();
+  }).catch((err) => {
+    console.error("Failed to initialize Ammo.js or the scene:", err);
+  });
+} else {
+  // If Ammo is not available, start without physics
+  console.warn("Ammo.js not found. Starting without physics support.");
+  init().catch((err) => {
+    console.error("Failed to initialize the scene:", err);
+  });
+}

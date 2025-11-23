@@ -13,7 +13,7 @@ class RigidBody {
   setRollingFriction(val) {
     this.body_.setRollingFriction(val);
   }
-
+ 
   createBox(mass, pos, quat, size) {
     this.transform_ = new Ammo.btTransform();
     this.transform_.setIdentity();
@@ -235,7 +235,7 @@ export default function init() {
       rigidBodies.push({ mesh: wall, rigidBody: rbWall });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
     }
-
+    
     // Create a wall plane
     const targetGeometry = new PlaneGeometry(5, 5);
     const targetMaterial = new MeshStandardMaterial({
@@ -245,7 +245,7 @@ export default function init() {
     });
 
     const targetWall = new Mesh(targetGeometry, targetMaterial);
-    targetWall.position.set(0, 5, -9.9); // Position target at original location
+    targetWall.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
     targetWall.receiveShadow = true;
     scene.add(targetWall);
     // Create physics body for the wall (mass 0 = static/immovable object)
@@ -448,25 +448,19 @@ export default function init() {
         const spawnPos = camera.position.clone().add(
           direction.clone().multiplyScalar(2),
         );
-
+        
         // Update mesh position
         inventory.heldItem.mesh.position.copy(spawnPos);
 
         // Create a completely new RigidBody
         const newRb = new RigidBody();
-        newRb.createSphere(
-          5,
-          { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-          0.5,
-        );
+        newRb.createSphere(5, { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z }, 0.5);
         newRb.setFriction(0.5);
         newRb.setRestitution(0.6);
         physicsWorld.addRigidBody(newRb.body_);
 
         // Update the rigidBodies array with the new body
-        const objIndex = rigidBodies.findIndex((rb) =>
-          rb.mesh === inventory.heldItem.mesh
-        );
+        const objIndex = rigidBodies.findIndex(rb => rb.mesh === inventory.heldItem.mesh);
         if (objIndex !== -1) {
           rigidBodies[objIndex].rigidBody = newRb;
         }
@@ -553,14 +547,9 @@ export default function init() {
                   console.log("Collision: cube and ground are touching");
 
                   // Check if sphere hit the target wall
-                  if (
-                    (obj0.mesh === clickableSphere &&
-                      obj1.mesh === targetWall) ||
-                    (obj1.mesh === clickableSphere && obj0.mesh === targetWall)
-                  ) {
-                    const messageElement = document.getElementById(
-                      "target-message",
-                    );
+                  if ((obj0.mesh === clickableSphere && obj1.mesh === targetWall) ||
+                      (obj1.mesh === clickableSphere && obj0.mesh === targetWall)) {
+                    const messageElement = document.getElementById("target-message");
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
@@ -581,7 +570,7 @@ export default function init() {
           if (inventory.heldItem && obj.mesh === inventory.heldItem.mesh) {
             continue;
           }
-
+          
           const ms = obj.rigidBody.body_.getMotionState();
           if (ms) {
             ms.getWorldTransform(obj.rigidBody.transform_);
@@ -596,23 +585,23 @@ export default function init() {
       // Update held item position (bottom right of screen)
       if (inventory.heldItem) {
         const heldMesh = inventory.heldItem.mesh;
-
+        
         // Get camera's forward, right, and up vectors
         const forward = new lib.Vector3();
         const right = new lib.Vector3();
         const up = new lib.Vector3(0, 1, 0);
-
+        
         camera.getWorldDirection(forward);
         right.crossVectors(forward, up).normalize();
         up.crossVectors(right, forward).normalize();
-
+        
         // Position in bottom right: forward 1.5 units, right 0.8 units, down 0.6 units
         const offset = forward.multiplyScalar(1.5)
           .add(right.multiplyScalar(0.8))
           .add(up.multiplyScalar(-0.6));
-
+        
         heldMesh.position.copy(camera.position).add(offset);
-
+        
         // Make it rotate slightly to look held
         heldMesh.rotation.copy(camera.rotation);
       }
