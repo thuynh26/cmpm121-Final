@@ -29,16 +29,16 @@
     <script
       src="https://cdn.jsdelivr.net/gh/kripken/ammo.js@HEAD/builds/ammo.js"
     ></script>
-    <script>
+    <script type="module">
       // Wait for Ammo to be fully ready before loading the module
       if (typeof Ammo === "function") {
         Ammo().then(() => {
           // Now load the boot module after Ammo is initialized
-          import("/src/boot.js");
+          import("./src/boot.js");
         });
       } else {
         // If Ammo didn't load, still start the app
-        import("/src/boot.js");
+        import("./src/boot.js");
       }
     </script>
   </body>
