@@ -55,10 +55,6 @@ _from collabarative session at noon with Joshua & Brody & Tina_
 
 - Ammo.js has been imported and RigidBody class has been created to implement 3d game physics
 
-# Devlog Entry - 11/22/2025
-
-## Progress Notes
-
 ### 3D Environment Setup
 
 - **3D Scene Objects**: Added a basic 3D environment with multiple objects to the scene:
@@ -105,3 +101,45 @@ _from collabarative session at noon with Joshua & Brody & Tina_
 - **Antialiasing**: Enabled for smoother visual rendering
 - **Material System**: Using `MeshStandardMaterial` for physically-based rendering with roughness and metalness properties
 - **Dev Container**: Added `.devcontainer/devcontainer.json` for auto installing DENO
+
+# Devlog Entry - 11/22/2025
+
+### Point-and-Click Controls
+
+- **Manual Camera System**: Custom first-person look controls with right-click drag (no WASD movement)
+- **Camera Position**: Fixed at (0, 1.6, 3) with Euler angle rotation and vertical clamping (±89°)
+- **Mouse Sensitivity**: 0.002 with proper delta tracking to prevent snapping issues
+
+### Interactive Object System
+
+- **Clickable Sphere**: Yellow emissive sphere (0.5 radius) at (0, 2, 0) with physics (mass=5)
+- **Raycasting**: Left-click detection converts screen coordinates to world ray for object intersection
+- **Inventory System**: Pick up items (left-click), hold reference, throw with SPACE key
+
+### Inventory & Physics Mechanics
+
+- **Pickup**: Left-click removes object from physics world and stores in inventory (1 item max)
+- **Held Item Display**: Item positioned in bottom-right of camera view, follows look direction
+- **Throw**: SPACE spawns item 2 units ahead, recreates physics body, applies 1000-unit impulse in camera direction
+
+### Physics Implementation
+
+- **Collision Detection**: Contact manifold system with distance checks and Set-based deduplication
+- **Fixed Timestep**: 60 FPS physics (1/60s) with 10 max substeps, delta capped at 0.1s
+- **Static Objects**: Ground plane (20x20 at y=0) and vertical wall (20x20 at z=-10)
+- **Body Activation**: All bodies set to DISABLE_DEACTIVATION to ensure continuous collision detection
+
+### Environment
+
+- **Ground**: Horizontal green plane (20x20) with static physics body
+- **Wall**: Vertical gray plane at z=-10, centered at y=0, aligned with collision box (20x20x1)
+- **Target**: Red 5x5 target at y=5, z=-9.9 with collision detection
+- **Victory Condition**: Message displays when sphere hits target wall
+- **Red Cube**: Dynamic object (mass=10) for testing physics interactions
+- **Lighting**: Ambient (60%) + directional light with shadows
+
+### Controls
+
+- **Right-click drag**: Look around
+- **Left-click**: Pick up sphere
+- **SPACE**: Throw held item
