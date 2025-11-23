@@ -1,12 +1,12 @@
 // Boot module: load Three.js, expose it as a global, then start the app.
 // Keeping the import here ensures the team uses a single global THREE instance.
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 import init from "./main.js";
 
 // Expose the library globally so `src/main.js` (and other modules) can use it.
 globalThis.THREE = THREE;
-globalThis.OrbitControls = OrbitControls;
+globalThis.PointerLockControls = PointerLockControls;
 
 // Initialize Ammo.js first, then start the app
 // Ammo() is a function that returns a promise when the physics engine is ready
