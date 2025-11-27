@@ -32,7 +32,10 @@
     <script type="module">
       // Wait for Ammo to be fully ready before loading the module
       if (typeof Ammo === "function") {
-        Ammo().then(() => {
+        Ammo().then(() => {Ammo().then((AmmoLib) => {
+          // Expose initialized Ammo globally
+          window.Ammo = AmmoLib;
+        });
           // Now load the boot module after Ammo is initialized
           import("./src/boot.js");
         });
