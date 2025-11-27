@@ -152,11 +152,17 @@ export default function init() {
     const scene = new Scene();
     scene.background = new Color(0x87CEEB); // Sky blue background
 
+
+    const sceneTwo = new Scene();
+    sceneTwo.background = new Color(0xFF0000); // Sky blue background
+
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
     const grid = new GridHelper(10, 10); // size 10, 10 divisions
     grid.position.y = 0; // place grid at world origin
     scene.add(grid);
+    sceneTwo.add(grid);
+
 
     // Add lighting to the scene
     // Ambient light provides soft overall illumination
@@ -181,6 +187,7 @@ export default function init() {
     ground.position.y = 0;
     ground.receiveShadow = true;
     scene.add(ground);
+    sceneTwo.add(ground);
 
     // Create physics body for the ground (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -253,7 +260,7 @@ export default function init() {
       const rbtargetWall = new RigidBody();
       // Create vertical target: 5x5 plane, positioned so bottom edge is at ground (y=0)
       // Center at y=2.5 so it spans from y=0 to y=5
-      rbtargetWall.createBox(0, { x: 0, y: 2.5, z: -9.9 }, {
+      rbtargetWall.createBox(1, { x: 0, y: 2.5, z: -9.9 }, {
         x: 0,
         y: 0,
         z: 0,
@@ -277,6 +284,8 @@ export default function init() {
     const redCube = new Mesh(cubeGeometry, redCubeMaterial);
     redCube.position.set(-2, 5, 0); // Set initial position to match physics body
     redCube.castShadow = true;
+    redCube.userData.clickable = true;
+
     scene.add(redCube);
 
     if (physicsWorld) {
@@ -306,6 +315,8 @@ export default function init() {
       roughness: 0.3,
       metalness: 0.7,
     });
+    //sphereMaterial.color = "0xff0000" ;
+    
     const clickableSphere = new Mesh(sphereGeometry, sphereMaterial);
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
@@ -323,7 +334,7 @@ export default function init() {
       rigidBodies.push({ mesh: clickableSphere, rigidBody: sphereRigidBody });
       console.log("Sphere physics body added at y=2, mass=5");
     }
-
+    //console.log("sphere COlor: "+ sphereRigidBody);
     // Inventory system
     const inventory = {
       heldItem: null, // Reference to held object {mesh, rigidBody}
@@ -422,11 +433,16 @@ export default function init() {
       const intersects = raycaster.intersectObjects(scene.children, true);
 
       for (const intersect of intersects) {
+        if (intersect.object.userData.clickable && inventory.heldItem){
+          inventory.heldItem.color = intersect.object.style.Color;
+          console.log("Holding item and cllicking another"+ inventory.heldItem);
+        }
         if (intersect.object.userData.clickable && !inventory.heldItem) {
           // Pick up the sphere
           inventory.heldItem = rigidBodies.find((rb) =>
             rb.mesh === intersect.object
           );
+          console.log("CURRENTLY HOLDING: "+ inventory.heldItem.Color);
           if (inventory.heldItem && physicsWorld) {
             // Remove from physics world
             physicsWorld.removeRigidBody(inventory.heldItem.rigidBody.body_);
@@ -459,7 +475,7 @@ export default function init() {
           { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
           0.5,
         );
-        newRb.setFriction(0.5);
+        newRb.setFriction(.5);
         newRb.setRestitution(0.6);
         physicsWorld.addRigidBody(newRb.body_);
 
@@ -472,7 +488,7 @@ export default function init() {
         }
 
         // Apply throw force in camera direction
-        const throwForce = direction.normalize().multiplyScalar(1000);
+        const throwForce = direction.normalize().multiplyScalar(200);
         const ammoForce = new Ammo.btVector3(
           throwForce.x,
           throwForce.y,
@@ -491,8 +507,9 @@ export default function init() {
 
     // Main render loop with physics updates
     const clock = new lib.Clock();
-
+    let sceneTwoCheck = false;
     function animate() {
+      
       const deltaTime = clock.getDelta();
 
       // Update physics world
@@ -558,12 +575,16 @@ export default function init() {
                       obj1.mesh === targetWall) ||
                     (obj1.mesh === clickableSphere && obj0.mesh === targetWall)
                   ) {
+                    console.log("collidededed");
                     const messageElement = document.getElementById(
                       "target-message",
                     );
+                    sceneTwoCheck = true;
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
+                      
+                      
                     }
                   }
 
@@ -592,7 +613,7 @@ export default function init() {
           }
         }
       }
-
+      
       // Update held item position (bottom right of screen)
       if (inventory.heldItem) {
         const heldMesh = inventory.heldItem.mesh;
@@ -618,6 +639,12 @@ export default function init() {
       }
 
       renderer.render(scene, camera);
+      if(sceneTwoCheck){
+        renderer.render(sceneTwo, camera);
+      }
+
+      
+
       requestAnimationFrame(animate);
     }
 
