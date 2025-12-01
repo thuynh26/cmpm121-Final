@@ -1,78 +1,5 @@
-class RigidBody {
-  constructor() {
-  }
-
-  setRestitution(val) {
-    this.body_.setRestitution(val);
-  }
-
-  setFriction(val) {
-    this.body_.setFriction(val);
-  }
-
-  setRollingFriction(val) {
-    this.body_.setRollingFriction(val);
-  }
-
-  createBox(mass, pos, quat, size) {
-    this.transform_ = new Ammo.btTransform();
-    this.transform_.setIdentity();
-    this.transform_.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    this.transform_.setRotation(
-      new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w),
-    );
-    this.motionState_ = new Ammo.btDefaultMotionState(this.transform_);
-
-    const btSize = new Ammo.btVector3(size.x * 0.5, size.y * 0.5, size.z * 0.5);
-    this.shape_ = new Ammo.btBoxShape(btSize);
-    this.shape_.setMargin(0.05);
-
-    this.inertia_ = new Ammo.btVector3(0, 0, 0);
-    if (mass > 0) {
-      this.shape_.calculateLocalInertia(mass, this.inertia_);
-    }
-
-    this.info_ = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      this.motionState_,
-      this.shape_,
-      this.inertia_,
-    );
-    this.body_ = new Ammo.btRigidBody(this.info_);
-
-    // Activate the body so it responds to physics
-    this.body_.setActivationState(4); // DISABLE_DEACTIVATION
-
-    Ammo.destroy(btSize);
-  }
-
-  createSphere(mass, pos, size) {
-    this.transform_ = new Ammo.btTransform();
-    this.transform_.setIdentity();
-    this.transform_.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    this.transform_.setRotation(new Ammo.btQuaternion(0, 0, 0, 1));
-    this.motionState_ = new Ammo.btDefaultMotionState(this.transform_);
-
-    this.shape_ = new Ammo.btSphereShape(size);
-    this.shape_.setMargin(0.05);
-
-    this.inertia_ = new Ammo.btVector3(0, 0, 0);
-    if (mass > 0) {
-      this.shape_.calculateLocalInertia(mass, this.inertia_);
-    }
-
-    this.info_ = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      this.motionState_,
-      this.shape_,
-      this.inertia_,
-    );
-    this.body_ = new Ammo.btRigidBody(this.info_);
-
-    // Activate the body so it responds to physics
-    this.body_.setActivationState(4); // DISABLE_DEACTIVATION
-  }
-}
+import RigidBody from "./physics/RigidBody.js";
+import { initWorldPhysics } from "./physics/worldInit.js";
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -91,40 +18,12 @@ export default function init() {
     }
     const lib = globalThree;
 
-    // Initialize Ammo.js physics world
-    let physicsWorld = null;
-    let dispatcher = null;
-    const rigidBodies = [];
-
-    if (typeof Ammo !== "undefined") {
-      console.log("Initializing Ammo.js physics world...");
-
-      // Set up the physics world configuration
-      const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-      dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-      const overlappingPairCache = new Ammo.btDbvtBroadphase();
-      const solver = new Ammo.btSequentialImpulseConstraintSolver();
-
-      // Create the physics world
-      physicsWorld = new Ammo.btDiscreteDynamicsWorld(
-        dispatcher,
-        overlappingPairCache,
-        solver,
-        collisionConfiguration,
-      );
-
-      // Set gravity (x, y, z) - y is up/down
-      physicsWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
-
-      console.log(
-        "Physics world created successfully with gravity:",
-        0,
-        -9.8,
-        0,
-      );
-    } else {
-      console.error("Ammo is not defined! Physics will not work.");
-    }
+    // init Ammo.js physics world 
+    const {
+      physicsWorld,
+      dispatcher,
+      rigidBodies,
+    } = initWorldPhysics(globalThis.Ammo);
 
     // Destructure the specific classes we need from the module for clarity.
     const {
@@ -142,6 +41,9 @@ export default function init() {
       AmbientLight,
       Raycaster,
       Vector2,
+      Euler,
+      Vector3,
+      Clock,
     } = lib;
 
     // `container` is the HTML element where the renderer's canvas is appended.
@@ -158,7 +60,7 @@ export default function init() {
 
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
-    const grid = new GridHelper(10, 10); // size 10, 10 divisions
+    let grid = new GridHelper(10, 10); // size 10, 10 divisions
     grid.position.y = 0; // place grid at world origin
     scene.add(grid);
     sceneTwo.add(grid);
@@ -175,6 +77,64 @@ export default function init() {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
+    // =============== ROOMS SYSTEM =============== //
+    const rooms = {
+      room1: new lib.Group(), // the starting room
+      room2: new lib.Group(),
+    };
+    let currentRoom = "room1";
+
+    scene.add(rooms.room1);
+    rooms.room1.visible = true;
+
+    scene.add(rooms.room2);
+    rooms.room2.visible = false;
+
+    // =============== ROOM 1 =============== //
+    const room1FloorGeo = new PlaneGeometry(10, 10);
+    const room1FloorMat = new MeshStandardMaterial({
+      color: 0x444444,
+      roughness: 0.9,
+      metalness: 0.1,
+    });
+    const room1Floor = new Mesh(room1FloorGeo, room1FloorMat);
+    room1Floor.rotation.x = -Math.PI / 2;
+    room1Floor.position.set(0, 0, 0);
+    room1Floor.receiveShadow = true;
+    rooms.room1.add(room1Floor);
+
+    // Back wall
+    const room1BackWallGeo = new PlaneGeometry(10, 5);
+    const room1BackWallMat = new MeshStandardMaterial({
+      color: 0x8888aa,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+    const room1BackWall = new Mesh(room1BackWallGeo, room1BackWallMat);
+    room1BackWall.position.set(0, 2.5, -5);
+    rooms.room1.add(room1BackWall);
+
+    // Door from Room 1 -> Room 2
+    const doorGeo = new BoxGeometry(1.5, 3, 0.2);
+    const doorMat = new MeshStandardMaterial({
+      color: 0x3366ff,
+      roughness: 0.6,
+      metalness: 0.2,
+    });
+
+    const doorRoom1To2 = new Mesh(doorGeo, doorMat);
+    doorRoom1To2.position.set(0, 1.5, -4.9);
+    doorRoom1To2.userData.isDoor = true;
+    doorRoom1To2.userData.doorTarget = "room2";
+    rooms.room1.add(doorRoom1To2);
+
+    // =============== ROOM 2 =============== //
+    // Add a simple grid so there's some visuals to see when loading the page.
+    // This should be removed after adding actual models to the scene.
+    let grid = new GridHelper(10, 10); // size 10, 10 divisions
+    grid.position.y = 0; // place grid at world origin
+    rooms.room2.add(grid);
+
     // Create a ground plane
     const groundGeometry = new PlaneGeometry(20, 20);
     const groundMaterial = new MeshStandardMaterial({
@@ -188,6 +148,7 @@ export default function init() {
     ground.receiveShadow = true;
     scene.add(ground);
     sceneTwo.add(ground);
+    rooms.room2.add(ground);
 
     // Create physics body for the ground (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -210,6 +171,13 @@ export default function init() {
       console.log("Ground physics body: box at y=0, size 20x1x20 (unrotated)");
     }
 
+    // Door to go from Room 2 -> Room 1 (behind the player)
+    const doorRoom2To1 = doorRoom1To2.clone();
+    doorRoom2To1.position.set(0, 1.5, 9);
+    doorRoom2To1.userData.isDoor = true;
+    doorRoom2To1.userData.doorTarget = "room1";
+    rooms.room2.add(doorRoom2To1);
+
     // Create a wall plane
     const wallGeometry = new PlaneGeometry(20, 20);
     const wallMaterial = new MeshStandardMaterial({
@@ -220,7 +188,8 @@ export default function init() {
     const wall = new Mesh(wallGeometry, wallMaterial);
     wall.position.set(0, 0, -10); // Position wall at back, centered at ground
     wall.receiveShadow = true;
-    scene.add(wall);
+    rooms.room2.add(wall);
+
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
       const rbWall = new RigidBody();
@@ -254,7 +223,7 @@ export default function init() {
     const targetWall = new Mesh(targetGeometry, targetMaterial);
     targetWall.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
     targetWall.receiveShadow = true;
-    scene.add(targetWall);
+    rooms.room2.add(targetWall);
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
       const rbtargetWall = new RigidBody();
@@ -287,6 +256,7 @@ export default function init() {
     redCube.userData.clickable = true;
 
     scene.add(redCube);
+    rooms.room2.add(redCube);
 
     if (physicsWorld) {
       const rbredCube = new RigidBody();
@@ -321,7 +291,7 @@ export default function init() {
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
     clickableSphere.userData.clickable = true;
-    scene.add(clickableSphere);
+    rooms.room2.add(clickableSphere);
 
     // Add physics body for sphere
     let sphereRigidBody = null;
@@ -334,11 +304,19 @@ export default function init() {
       rigidBodies.push({ mesh: clickableSphere, rigidBody: sphereRigidBody });
       console.log("Sphere physics body added at y=2, mass=5");
     }
-    //console.log("sphere COlor: "+ sphereRigidBody);
-    // Inventory system
+
+    // =============== Inventory and movement system =============== //
     const inventory = {
       heldItem: null, // Reference to held object {mesh, rigidBody}
     };
+
+    const moveState = {
+      forward: false,
+      back: false,
+      left: false,
+      right: false,
+    };
+    const moveSpeed = 5;
 
     // Create a perspective camera. The aspect ratio is from the container's size so the view matches the canvas dimensions.
     const camera = new PerspectiveCamera(
@@ -347,7 +325,25 @@ export default function init() {
       0.1,
       1000,
     );
-    camera.position.set(0, 1.6, 3); // camera position (x,y,z)
+    // camera.position.set(0, 1.6, 5); // initial camera position (x,y,z)
+
+    // ============== ROOM SWITCHING HELPER ==============
+    function switchRoom(nextRoom) {
+      if (!rooms[nextRoom]) return;
+
+      rooms[currentRoom].visible = false;
+      currentRoom = nextRoom;
+      rooms[currentRoom].visible = true;
+
+      if (currentRoom === "room1") {
+        camera.position.set(0, 1.6, 5);
+      } else if (currentRoom === "room2") {
+        camera.position.set(0, 1.6, 8);
+      }
+    }
+
+    // Game starts in in room1
+    switchRoom("room1");
 
     // Create the WebGL renderer, set its size and pixel ratio, then attach
     // the renderer's canvas to the container element in index.html.
@@ -446,46 +442,72 @@ export default function init() {
           if (inventory.heldItem && physicsWorld) {
             // Remove from physics world
             physicsWorld.removeRigidBody(inventory.heldItem.rigidBody.body_);
+        const obj = intersect.object;
+
+        // FOR DOOR (to switch rooms)
+        if (obj.userData && obj.userData.isDoor && obj.userData.doorTarget) {
+          switchRoom(obj.userData.doorTarget);
+          return;
+        }
+
+        // FOR SPHERE (picking up)
+        if (obj.userData && obj.userData.clickable && !inventory.heldItem) {
+          const held = rigidBodies.find((rb) => rb.mesh === obj);
+          if (held && physicsWorld) {
+            physicsWorld.removeRigidBody(held.rigidBody.body_);
+            inventory.heldItem = held;
             console.log("Picked up sphere! Press SPACE to throw it.");
           }
-          break;
+          return;
         }
       }
     }
 
-    // Handle keyboard input for throwing
+    // Handle keyboard input for throwing and movement
     function onKeyDown(event) {
-      if (event.code === "Space" && inventory.heldItem) {
-        // Get camera direction
-        const direction = new lib.Vector3();
-        camera.getWorldDirection(direction);
+      switch (event.code) {
+        case "KeyW":
+          moveState.forward = true;
+          break;
+        case "KeyS":
+          moveState.back = true;
+          break;
+        case "KeyA":
+          moveState.left = true;
+          break;
+        case "KeyD":
+          moveState.right = true;
+          break;
+        case "Space":
+          // Throw sphere if holding one
+          if (inventory.heldItem && physicsWorld) {
+            const direction = new Vector3();
+            camera.getWorldDirection(direction);
 
-        // Position sphere in front of camera
-        const spawnPos = camera.position.clone().add(
-          direction.clone().multiplyScalar(2),
-        );
+            const spawnPos = camera.position.clone().add(
+              direction.clone().multiplyScalar(2),
+            );
 
-        // Update mesh position
-        inventory.heldItem.mesh.position.copy(spawnPos);
+            // Update mesh position
+            inventory.heldItem.mesh.position.copy(spawnPos);
 
-        // Create a completely new RigidBody
-        const newRb = new RigidBody();
-        newRb.createSphere(
-          5,
-          { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-          0.5,
-        );
-        newRb.setFriction(.5);
-        newRb.setRestitution(0.6);
-        physicsWorld.addRigidBody(newRb.body_);
+            // New rigid body
+            const newRb = new RigidBody();
+            newRb.createSphere(
+              5,
+              { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+              0.5,
+            );
+            newRb.setFriction(0.5);
+            newRb.setRestitution(0.6);
+            physicsWorld.addRigidBody(newRb.body_);
 
-        // Update the rigidBodies array with the new body
-        const objIndex = rigidBodies.findIndex((rb) =>
-          rb.mesh === inventory.heldItem.mesh
-        );
-        if (objIndex !== -1) {
-          rigidBodies[objIndex].rigidBody = newRb;
-        }
+            const idx = rigidBodies.findIndex(
+              (rb) => rb.mesh === inventory.heldItem.mesh,
+            );
+            if (idx !== -1) {
+              rigidBodies[idx].rigidBody = newRb;
+            }
 
         // Apply throw force in camera direction
         const throwForce = direction.normalize().multiplyScalar(200);
@@ -497,13 +519,33 @@ export default function init() {
         newRb.body_.applyCentralImpulse(ammoForce);
         Ammo.destroy(ammoForce);
 
-        console.log("Threw sphere!");
-        inventory.heldItem = null;
+            console.log("Threw sphere!");
+            inventory.heldItem = null;
+          }
+          break;
+      }
+    }
+
+    function onKeyUp(event) {
+      switch (event.code) {
+        case "KeyW":
+          moveState.forward = false;
+          break;
+        case "KeyS":
+          moveState.back = false;
+          break;
+        case "KeyA":
+          moveState.left = false;
+          break;
+        case "KeyD":
+          moveState.right = false;
+          break;
       }
     }
 
     renderer.domElement.addEventListener("click", onMouseClick);
     globalThis.addEventListener("keydown", onKeyDown);
+    globalThis.addEventListener("keyup", onKeyUp);
 
     // Main render loop with physics updates
     const clock = new lib.Clock();
@@ -614,6 +656,33 @@ export default function init() {
         }
       }
       
+
+      // Player movement
+      const moveDir = new Vector3();
+
+      if (
+        moveState.forward || moveState.back ||
+        moveState.left || moveState.right
+      ) {
+        const forward = new Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+
+        const right = new Vector3();
+        right.crossVectors(forward, new Vector3(0, 1, 0)).normalize();
+
+        if (moveState.forward) moveDir.add(forward);
+        if (moveState.back) moveDir.sub(forward);
+        if (moveState.left) moveDir.sub(right);
+        if (moveState.right) moveDir.add(right);
+
+        if (moveDir.lengthSq() > 0) {
+          moveDir.normalize();
+          camera.position.addScaledVector(moveDir, moveSpeed * deltaTime);
+        }
+      }
+
       // Update held item position (bottom right of screen)
       if (inventory.heldItem) {
         const heldMesh = inventory.heldItem.mesh;
