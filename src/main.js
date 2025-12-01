@@ -1,78 +1,4 @@
-class RigidBody {
-  constructor() {
-  }
-
-  setRestitution(val) {
-    this.body_.setRestitution(val);
-  }
-
-  setFriction(val) {
-    this.body_.setFriction(val);
-  }
-
-  setRollingFriction(val) {
-    this.body_.setRollingFriction(val);
-  }
-
-  createBox(mass, pos, quat, size) {
-    this.transform_ = new Ammo.btTransform();
-    this.transform_.setIdentity();
-    this.transform_.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    this.transform_.setRotation(
-      new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w),
-    );
-    this.motionState_ = new Ammo.btDefaultMotionState(this.transform_);
-
-    const btSize = new Ammo.btVector3(size.x * 0.5, size.y * 0.5, size.z * 0.5);
-    this.shape_ = new Ammo.btBoxShape(btSize);
-    this.shape_.setMargin(0.05);
-
-    this.inertia_ = new Ammo.btVector3(0, 0, 0);
-    if (mass > 0) {
-      this.shape_.calculateLocalInertia(mass, this.inertia_);
-    }
-
-    this.info_ = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      this.motionState_,
-      this.shape_,
-      this.inertia_,
-    );
-    this.body_ = new Ammo.btRigidBody(this.info_);
-
-    // Activate the body so it responds to physics
-    this.body_.setActivationState(4); // DISABLE_DEACTIVATION
-
-    Ammo.destroy(btSize);
-  }
-
-  createSphere(mass, pos, size) {
-    this.transform_ = new Ammo.btTransform();
-    this.transform_.setIdentity();
-    this.transform_.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-    this.transform_.setRotation(new Ammo.btQuaternion(0, 0, 0, 1));
-    this.motionState_ = new Ammo.btDefaultMotionState(this.transform_);
-
-    this.shape_ = new Ammo.btSphereShape(size);
-    this.shape_.setMargin(0.05);
-
-    this.inertia_ = new Ammo.btVector3(0, 0, 0);
-    if (mass > 0) {
-      this.shape_.calculateLocalInertia(mass, this.inertia_);
-    }
-
-    this.info_ = new Ammo.btRigidBodyConstructionInfo(
-      mass,
-      this.motionState_,
-      this.shape_,
-      this.inertia_,
-    );
-    this.body_ = new Ammo.btRigidBody(this.info_);
-
-    // Activate the body so it responds to physics
-    this.body_.setActivationState(4); // DISABLE_DEACTIVATION
-  }
-}
+import RigidBody from "./physics/RigidBody.js";
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -170,7 +96,7 @@ export default function init() {
     const rooms = {
       room1: new lib.Group(), // the starting room
       room2: new lib.Group(),
-    }
+    };
     let currentRoom = "room1";
 
     scene.add(rooms.room1);
@@ -180,7 +106,7 @@ export default function init() {
     rooms.room2.visible = false;
 
     // =============== ROOM 1 =============== //
-    const room1FloorGeo  = new PlaneGeometry(10, 10);
+    const room1FloorGeo = new PlaneGeometry(10, 10);
     const room1FloorMat = new MeshStandardMaterial({
       color: 0x444444,
       roughness: 0.9,
@@ -192,7 +118,7 @@ export default function init() {
     room1Floor.receiveShadow = true;
     rooms.room1.add(room1Floor);
 
-        // Back wall
+    // Back wall
     const room1BackWallGeo = new PlaneGeometry(10, 5);
     const room1BackWallMat = new MeshStandardMaterial({
       color: 0x8888aa,
@@ -397,7 +323,7 @@ export default function init() {
       back: false,
       left: false,
       right: false,
-    }
+    };
     const moveSpeed = 5;
 
     // Create a perspective camera. The aspect ratio is from the container's size so the view matches the canvas dimensions.
@@ -593,7 +519,7 @@ export default function init() {
           break;
       }
     }
-    
+
     function onKeyUp(event) {
       switch (event.code) {
         case "KeyW":
