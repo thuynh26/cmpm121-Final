@@ -1,4 +1,5 @@
 import RigidBody from "./physics/RigidBody.js";
+import { initWorldPhysics } from "./physics/worldInit.js";
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -17,40 +18,12 @@ export default function init() {
     }
     const lib = globalThree;
 
-    // Initialize Ammo.js physics world
-    let physicsWorld = null;
-    let dispatcher = null;
-    const rigidBodies = [];
-
-    if (typeof Ammo !== "undefined") {
-      console.log("Initializing Ammo.js physics world...");
-
-      // Set up the physics world configuration
-      const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-      dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-      const overlappingPairCache = new Ammo.btDbvtBroadphase();
-      const solver = new Ammo.btSequentialImpulseConstraintSolver();
-
-      // Create the physics world
-      physicsWorld = new Ammo.btDiscreteDynamicsWorld(
-        dispatcher,
-        overlappingPairCache,
-        solver,
-        collisionConfiguration,
-      );
-
-      // Set gravity (x, y, z) - y is up/down
-      physicsWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
-
-      console.log(
-        "Physics world created successfully with gravity:",
-        0,
-        -9.8,
-        0,
-      );
-    } else {
-      console.error("Ammo is not defined! Physics will not work.");
-    }
+    // init Ammo.js physics world 
+    const {
+      physicsWorld,
+      dispatcher,
+      rigidBodies,
+    } = initWorldPhysics(globalThis.Ammo);
 
     // Destructure the specific classes we need from the module for clarity.
     const {

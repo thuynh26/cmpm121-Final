@@ -14,8 +14,8 @@
       <div
         style="text-align: center; margin-top: 10px; font-size: 16px; color: #555"
       >
-        <strong>Controls:</strong> W/A/S/D to move | Right-click drag to look around | Left-click
-        to iteract | SPACE to throw
+        <strong>Controls:</strong> W/A/S/D to move | Right-click drag to look
+        around | Left-click to iteract | SPACE to throw
       </div>
       <div
         id="target-message"
@@ -26,19 +26,19 @@
     </main>
 
     <!-- Load Ammo.js first and wait for it to initialize before loading boot.js -->
-  <script
-    src="https://cdn.jsdelivr.net/gh/kripken/ammo.js@HEAD/builds/ammo.js"
-  ></script>
-  <script type="module">
-    if (typeof Ammo === "function") {
-      Ammo().then((AmmoLib) => {
-        window.Ammo = AmmoLib;
+    <script
+      src="https://cdn.jsdelivr.net/gh/kripken/ammo.js@HEAD/builds/ammo.js"
+    ></script>
+    <script type="module">
+      if (typeof Ammo === "function") {
+        Ammo().then((AmmoLib) => {
+          window.Ammo = AmmoLib;
+          import("./src/boot.js");
+        });
+      } else {
+        console.warn("Ammo failed to load, starting without physics.");
         import("./src/boot.js");
-      });
-    } else {
-      console.warn("Ammo failed to load, starting without physics.");
-      import("./src/boot.js");
-    }
-  </script>
+      }
+    </script>
   </body>
 </html>
