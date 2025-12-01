@@ -450,13 +450,21 @@ export default function init() {
 
         // FOR SPHERE (picking up)
         if (obj.userData && obj.userData.clickable && !inventory.heldItem) {
+          console.log(obj.userData);
           const held = rigidBodies.find((rb) => rb.mesh === obj);
           if (held && physicsWorld) {
             physicsWorld.removeRigidBody(held.rigidBody.body_);
             inventory.heldItem = held;
+            console.log(held.mesh.material.color);
             console.log("Picked up sphere! Press SPACE to throw it.");
           }
           return;
+        }else if(obj.userData && obj.userData.clickable && inventory.heldItem){
+          const newClick = rigidBodies.find((rb) => rb.mesh === obj);
+          console.log("already holding")
+          console.log(newClick.mesh.material.color);
+          console.log(inventory.heldItem.mesh.material.color);
+          inventory.heldItem.mesh.material.color = newClick.mesh.material.color;
         }
       }
     }
