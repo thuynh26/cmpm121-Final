@@ -52,17 +52,15 @@ export default function init() {
     const scene = new Scene();
     scene.background = new Color(0x87CEEB); // Sky blue background
 
-
     const sceneTwo = new Scene();
     sceneTwo.background = new Color(0xFF0000); // Sky blue background
 
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
-    let grid = new GridHelper(10, 10); // size 10, 10 divisions
-    grid.position.y = 0; // place grid at world origin
-    scene.add(grid);
-    sceneTwo.add(grid);
-
+    const grid1 = new GridHelper(10, 10); // size 10, 10 divisions
+    grid1.position.y = 0; // place grid at world origin
+    scene.add(grid1);
+    sceneTwo.add(grid1);
 
     // Add lighting to the scene
     // Ambient light provides soft overall illumination
@@ -129,9 +127,9 @@ export default function init() {
     // =============== ROOM 2 =============== //
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
-    let grid = new GridHelper(10, 10); // size 10, 10 divisions
-    grid.position.y = 0; // place grid at world origin
-    rooms.room2.add(grid);
+    const grid2 = new GridHelper(10, 10); // size 10, 10 divisions
+    grid2.position.y = 0; // place grid at world origin
+    rooms.room2.add(grid2);
 
     // Create a ground plane
     const groundGeometry = new PlaneGeometry(20, 20);
@@ -284,7 +282,7 @@ export default function init() {
       metalness: 0.7,
     });
     //sphereMaterial.color = "0xff0000" ;
-    
+
     const clickableSphere = new Mesh(sphereGeometry, sphereMaterial);
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
@@ -427,19 +425,6 @@ export default function init() {
       const intersects = raycaster.intersectObjects(scene.children, true);
 
       for (const intersect of intersects) {
-        if (intersect.object.userData.clickable && inventory.heldItem){
-          inventory.heldItem.color = intersect.object.style.Color;
-          console.log("Holding item and cllicking another"+ inventory.heldItem);
-        }
-        if (intersect.object.userData.clickable && !inventory.heldItem) {
-          // Pick up the sphere
-          inventory.heldItem = rigidBodies.find((rb) =>
-            rb.mesh === intersect.object
-          );
-          console.log("CURRENTLY HOLDING: "+ inventory.heldItem.Color);
-          if (inventory.heldItem && physicsWorld) {
-            // Remove from physics world
-            physicsWorld.removeRigidBody(inventory.heldItem.rigidBody.body_);
         const obj = intersect.object;
 
         // FOR DOOR (to switch rooms)
@@ -459,9 +444,11 @@ export default function init() {
             console.log("Picked up sphere! Press SPACE to throw it.");
           }
           return;
-        }else if(obj.userData && obj.userData.clickable && inventory.heldItem){
+        } else if (
+          obj.userData && obj.userData.clickable && inventory.heldItem
+        ) {
           const newClick = rigidBodies.find((rb) => rb.mesh === obj);
-          console.log("already holding")
+          console.log("already holding");
           console.log(newClick.mesh.material.color);
           console.log(inventory.heldItem.mesh.material.color);
           inventory.heldItem.mesh.material.color = newClick.mesh.material.color;
@@ -515,15 +502,15 @@ export default function init() {
               rigidBodies[idx].rigidBody = newRb;
             }
 
-        // Apply throw force in camera direction
-        const throwForce = direction.normalize().multiplyScalar(200);
-        const ammoForce = new Ammo.btVector3(
-          throwForce.x,
-          throwForce.y,
-          throwForce.z,
-        );
-        newRb.body_.applyCentralImpulse(ammoForce);
-        Ammo.destroy(ammoForce);
+            // Apply throw force in camera direction
+            const throwForce = direction.normalize().multiplyScalar(200);
+            const ammoForce = new Ammo.btVector3(
+              throwForce.x,
+              throwForce.y,
+              throwForce.z,
+            );
+            newRb.body_.applyCentralImpulse(ammoForce);
+            Ammo.destroy(ammoForce);
 
             console.log("Threw sphere!");
             inventory.heldItem = null;
@@ -557,7 +544,6 @@ export default function init() {
     const clock = new lib.Clock();
     let sceneTwoCheck = false;
     function animate() {
-      
       const deltaTime = clock.getDelta();
 
       // Update physics world
@@ -631,8 +617,6 @@ export default function init() {
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
-                      
-                      
                     }
                   }
 
@@ -661,7 +645,6 @@ export default function init() {
           }
         }
       }
-      
 
       // Player movement
       const moveDir = new Vector3();
@@ -714,11 +697,9 @@ export default function init() {
       }
 
       renderer.render(scene, camera);
-      if(sceneTwoCheck){
+      if (sceneTwoCheck) {
         renderer.render(sceneTwo, camera);
       }
-
-      
 
       requestAnimationFrame(animate);
     }
