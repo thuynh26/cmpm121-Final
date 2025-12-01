@@ -18,7 +18,7 @@ export default function init() {
     }
     const lib = globalThree;
 
-    // init Ammo.js physics world 
+    // init Ammo.js physics world
     const {
       physicsWorld,
       dispatcher,
@@ -41,9 +41,7 @@ export default function init() {
       AmbientLight,
       Raycaster,
       Vector2,
-      Euler,
       Vector3,
-      Clock,
     } = lib;
 
     // `container` is the HTML element where the renderer's canvas is appended.
