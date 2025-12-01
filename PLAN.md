@@ -2,7 +2,7 @@
 
 ## Fullfill F1 Requirements
 
-### Your team must deploy a small game prototype satisfying the following requirements:
+### Your team must deploy a small game prototype satisfying the following requirements
 
 - [ ]It is built using a platform (i.e. engine, framework, language) that does not already provide support for 3D rendering and physics simulation.
 - [ ]It uses a third-party 3D rendering library.

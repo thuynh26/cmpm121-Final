@@ -44,6 +44,32 @@ export default function init() {
       Vector3,
     } = lib;
 
+    // =============== OBJECT TYPE CONSTANTS =============== //
+    const ObjectType = {
+      PICKABLE: "pickable", // Can be picked up and stored in inventory
+      COLOR_BUTTON: "colorButton", // Changes color of held items
+      DOOR: "door", // Switches between rooms
+    };
+
+    // Helper functions for object types
+    const ObjectHelpers = {
+      makePickable: (mesh) => {
+        mesh.userData.objectType = ObjectType.PICKABLE;
+      },
+      makeColorButton: (mesh, color) => {
+        mesh.userData.objectType = ObjectType.COLOR_BUTTON;
+        mesh.userData.buttonColor = color;
+      },
+      makeDoor: (mesh, targetRoom) => {
+        mesh.userData.objectType = ObjectType.DOOR;
+        mesh.userData.doorTarget = targetRoom;
+      },
+      isPickable: (mesh) => mesh.userData?.objectType === ObjectType.PICKABLE,
+      isColorButton: (mesh) =>
+        mesh.userData?.objectType === ObjectType.COLOR_BUTTON,
+      isDoor: (mesh) => mesh.userData?.objectType === ObjectType.DOOR,
+    };
+
     // `container` is the HTML element where the renderer's canvas is appended.
     // `index.html` should include `<div id="scene-container">` to show the renderer.
     const container = document.getElementById("scene-container");
@@ -54,6 +80,9 @@ export default function init() {
 
     const sceneTwo = new Scene();
     sceneTwo.background = new Color(0xFF0000); // Sky blue background
+
+    const sceneThree = new Scene();
+    sceneThree.background = new Color(0x00FF00); // Sky green background
 
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
@@ -120,8 +149,7 @@ export default function init() {
 
     const doorRoom1To2 = new Mesh(doorGeo, doorMat);
     doorRoom1To2.position.set(0, 1.5, -4.9);
-    doorRoom1To2.userData.isDoor = true;
-    doorRoom1To2.userData.doorTarget = "room2";
+    ObjectHelpers.makeDoor(doorRoom1To2, "room2");
     rooms.room1.add(doorRoom1To2);
 
     // =============== ROOM 2 =============== //
@@ -170,8 +198,7 @@ export default function init() {
     // Door to go from Room 2 -> Room 1 (behind the player)
     const doorRoom2To1 = doorRoom1To2.clone();
     doorRoom2To1.position.set(0, 1.5, 9);
-    doorRoom2To1.userData.isDoor = true;
-    doorRoom2To1.userData.doorTarget = "room1";
+    ObjectHelpers.makeDoor(doorRoom2To1, "room1");
     rooms.room2.add(doorRoom2To1);
 
     // Create a wall plane
@@ -249,7 +276,7 @@ export default function init() {
     const redCube = new Mesh(cubeGeometry, redCubeMaterial);
     redCube.position.set(-2, 5, 0); // Set initial position to match physics body
     redCube.castShadow = true;
-    redCube.userData.clickable = true;
+    ObjectHelpers.makePickable(redCube);
 
     scene.add(redCube);
     rooms.room2.add(redCube);
@@ -286,7 +313,7 @@ export default function init() {
     const clickableSphere = new Mesh(sphereGeometry, sphereMaterial);
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
-    clickableSphere.userData.clickable = true;
+    ObjectHelpers.makePickable(clickableSphere);
     rooms.room2.add(clickableSphere);
 
     // Add physics body for sphere
@@ -301,9 +328,54 @@ export default function init() {
       console.log("Sphere physics body added at y=2, mass=5");
     }
 
+    // =============== Color Buttons =============== //
+    // Create small cube buttons for changing colors
+    const buttonGeometry = new BoxGeometry(0.5, 0.5, 0.5);
+
+    // Red color button
+    const redButtonMaterial = new MeshStandardMaterial({
+      color: 0xff0000,
+      emissive: 0x440000,
+    });
+    const redButton = new Mesh(buttonGeometry, redButtonMaterial);
+    redButton.position.set(-3, 1, -2);
+    ObjectHelpers.makeColorButton(redButton, 0xff0000);
+    rooms.room2.add(redButton);
+
+    // Green color button
+    const greenButtonMaterial = new MeshStandardMaterial({
+      color: 0x00ff00,
+      emissive: 0x004400,
+    });
+    const greenButton = new Mesh(buttonGeometry, greenButtonMaterial);
+    greenButton.position.set(-2, 1, -2);
+    ObjectHelpers.makeColorButton(greenButton, 0x00ff00);
+    rooms.room2.add(greenButton);
+
+    // Blue color button
+    const blueButtonMaterial = new MeshStandardMaterial({
+      color: 0x0000ff,
+      emissive: 0x000044,
+    });
+    const blueButton = new Mesh(buttonGeometry, blueButtonMaterial);
+    blueButton.position.set(-1, 1, -2);
+    ObjectHelpers.makeColorButton(blueButton, 0x0000ff);
+    rooms.room2.add(blueButton);
+
+    // Yellow color button
+    const yellowButtonMaterial = new MeshStandardMaterial({
+      color: 0xffff00,
+      emissive: 0x444400,
+    });
+    const yellowButton = new Mesh(buttonGeometry, yellowButtonMaterial);
+    yellowButton.position.set(0, 1, -2);
+    ObjectHelpers.makeColorButton(yellowButton, 0xffff00);
+    rooms.room2.add(yellowButton);
+
     // =============== Inventory and movement system =============== //
     const inventory = {
-      heldItem: null, // Reference to held object {mesh, rigidBody}
+      heldItems: [], // Array of held objects {mesh, rigidBody}
+      currentItemIndex: 0, // Index of currently displayed item
     };
 
     const moveState = {
@@ -427,31 +499,47 @@ export default function init() {
       for (const intersect of intersects) {
         const obj = intersect.object;
 
-        // FOR DOOR (to switch rooms)
-        if (obj.userData && obj.userData.isDoor && obj.userData.doorTarget) {
+        // Handle door interactions
+        if (ObjectHelpers.isDoor(obj)) {
           switchRoom(obj.userData.doorTarget);
           return;
         }
 
-        // FOR SPHERE (picking up)
-        if (obj.userData && obj.userData.clickable && !inventory.heldItem) {
-          console.log(obj.userData);
-          const held = rigidBodies.find((rb) => rb.mesh === obj);
-          if (held && physicsWorld) {
-            physicsWorld.removeRigidBody(held.rigidBody.body_);
-            inventory.heldItem = held;
-            console.log(held.mesh.material.color);
-            console.log("Picked up sphere! Press SPACE to throw it.");
+        // Handle color button interactions
+        if (ObjectHelpers.isColorButton(obj)) {
+          if (inventory.heldItems.length > 0) {
+            const newColor = obj.userData.buttonColor;
+            const currentItem = inventory.heldItems[inventory.currentItemIndex];
+            currentItem.mesh.material.color.setHex(newColor);
+            console.log(
+              `Changed item ${inventory.currentItemIndex + 1} to color: #${
+                newColor.toString(16).padStart(6, "0")
+              }`,
+            );
+          } else {
+            console.log("No items in inventory to change color");
           }
           return;
-        } else if (
-          obj.userData && obj.userData.clickable && inventory.heldItem
-        ) {
-          const newClick = rigidBodies.find((rb) => rb.mesh === obj);
-          console.log("already holding");
-          console.log(newClick.mesh.material.color);
-          console.log(inventory.heldItem.mesh.material.color);
-          inventory.heldItem.mesh.material.color = newClick.mesh.material.color;
+        }
+
+        // Handle pickable item interactions
+        if (ObjectHelpers.isPickable(obj)) {
+          const itemData = rigidBodies.find((rb) => rb.mesh === obj);
+          if (itemData && physicsWorld) {
+            // Remove from physics world
+            physicsWorld.removeRigidBody(itemData.rigidBody.body_);
+
+            // Add to inventory
+            if (inventory.heldItems.length === 0) {
+              inventory.currentItemIndex = 0;
+            }
+            inventory.heldItems.push(itemData);
+
+            console.log(
+              `Picked up item! You now have ${inventory.heldItems.length} items. Press SPACE to throw.`,
+            );
+          }
+          return;
         }
       }
     }
@@ -472,8 +560,19 @@ export default function init() {
           moveState.right = true;
           break;
         case "Space":
-          // Throw sphere if holding one
-          if (inventory.heldItem && physicsWorld) {
+          // Throw currently selected item if holding any
+          if (inventory.heldItems.length > 0 && physicsWorld) {
+            const itemToThrow =
+              inventory.heldItems.splice(inventory.currentItemIndex, 1)[0]; // Remove current item
+
+            // Adjust current index if needed
+            if (
+              inventory.currentItemIndex >= inventory.heldItems.length &&
+              inventory.heldItems.length > 0
+            ) {
+              inventory.currentItemIndex = inventory.heldItems.length - 1;
+            }
+
             const direction = new Vector3();
             camera.getWorldDirection(direction);
 
@@ -482,21 +581,31 @@ export default function init() {
             );
 
             // Update mesh position
-            inventory.heldItem.mesh.position.copy(spawnPos);
+            itemToThrow.mesh.position.copy(spawnPos);
 
-            // New rigid body
+            // Determine shape based on mesh geometry
             const newRb = new RigidBody();
-            newRb.createSphere(
-              5,
-              { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-              0.5,
-            );
+            if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
+              newRb.createSphere(
+                5,
+                { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+                0.5,
+              );
+            } else {
+              // Default to box for other shapes
+              newRb.createBox(
+                5,
+                { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+                { x: 0, y: 0, z: 0, w: 1 },
+                { x: 1, y: 1, z: 1 },
+              );
+            }
             newRb.setFriction(0.5);
             newRb.setRestitution(0.6);
             physicsWorld.addRigidBody(newRb.body_);
 
             const idx = rigidBodies.findIndex(
-              (rb) => rb.mesh === inventory.heldItem.mesh,
+              (rb) => rb.mesh === itemToThrow.mesh,
             );
             if (idx !== -1) {
               rigidBodies[idx].rigidBody = newRb;
@@ -512,8 +621,9 @@ export default function init() {
             newRb.body_.applyCentralImpulse(ammoForce);
             Ammo.destroy(ammoForce);
 
-            console.log("Threw sphere!");
-            inventory.heldItem = null;
+            console.log(
+              `Threw item! ${inventory.heldItems.length} items remaining.`,
+            );
           }
           break;
       }
@@ -540,9 +650,36 @@ export default function init() {
     globalThis.addEventListener("keydown", onKeyDown);
     globalThis.addEventListener("keyup", onKeyUp);
 
+    // Handle mouse wheel for cycling through inventory
+    function onMouseWheel(event) {
+      if (inventory.heldItems.length > 1) {
+        event.preventDefault();
+
+        if (event.deltaY > 0) {
+          // Scroll down - next item
+          inventory.currentItemIndex = (inventory.currentItemIndex + 1) %
+            inventory.heldItems.length;
+        } else if (event.deltaY < 0) {
+          // Scroll up - previous item
+          inventory.currentItemIndex =
+            (inventory.currentItemIndex - 1 + inventory.heldItems.length) %
+            inventory.heldItems.length;
+        }
+
+        console.log(
+          `Switched to item ${
+            inventory.currentItemIndex + 1
+          }/${inventory.heldItems.length}`,
+        );
+      }
+    }
+
+    renderer.domElement.addEventListener("wheel", onMouseWheel, {
+      passive: false,
+    });
+
     // Main render loop with physics updates
     const clock = new lib.Clock();
-    let sceneTwoCheck = false;
     function animate() {
       const deltaTime = clock.getDelta();
 
@@ -630,8 +767,8 @@ export default function init() {
 
         // Update Three.js mesh positions from physics bodies
         for (const obj of rigidBodies) {
-          // Skip updating held item - it will be positioned relative to camera
-          if (inventory.heldItem && obj.mesh === inventory.heldItem.mesh) {
+          // Skip updating held items - they will be positioned relative to camera
+          if (inventory.heldItems.some((item) => item.mesh === obj.mesh)) {
             continue;
           }
 
@@ -672,9 +809,17 @@ export default function init() {
         }
       }
 
-      // Update held item position (bottom right of screen)
-      if (inventory.heldItem) {
-        const heldMesh = inventory.heldItem.mesh;
+      // Update held item position (only show currently selected item in bottom right of screen)
+      if (inventory.heldItems.length > 0) {
+        // Hide all inventory items first
+        inventory.heldItems.forEach((item) => {
+          item.mesh.visible = false;
+        });
+
+        // Only show and position the currently selected item
+        const currentItem = inventory.heldItems[inventory.currentItemIndex];
+        const heldMesh = currentItem.mesh;
+        heldMesh.visible = true;
 
         // Get camera's forward, right, and up vectors
         const forward = new lib.Vector3();
@@ -686,9 +831,9 @@ export default function init() {
         up.crossVectors(right, forward).normalize();
 
         // Position in bottom right: forward 1.5 units, right 0.8 units, down 0.6 units
-        const offset = forward.multiplyScalar(1.5)
-          .add(right.multiplyScalar(0.8))
-          .add(up.multiplyScalar(-0.6));
+        const offset = forward.clone().multiplyScalar(1.5)
+          .add(right.clone().multiplyScalar(0.8))
+          .add(up.clone().multiplyScalar(-0.6));
 
         heldMesh.position.copy(camera.position).add(offset);
 
@@ -697,10 +842,6 @@ export default function init() {
       }
 
       renderer.render(scene, camera);
-      if (sceneTwoCheck) {
-        renderer.render(sceneTwo, camera);
-      }
-
       requestAnimationFrame(animate);
     }
 

@@ -1,4 +1,6 @@
-# Devlog Entry - 11/14/2025
+# Final Project
+
+## Devlog Entry - 11/14/2025
 
 ## Introducing the Team
 
@@ -9,7 +11,7 @@
 
 ## Tools and materials
 
-### Engine:
+### Engine
 
 - For our engine, we plan to use the Baseline web browser. We decided to use this platform since our team is unfamiliar with other engines/platforms to develop games without integrated 3D graphics and all of our established skills in javaScript already.
 - **three.js** is a 3D library for JavaScript that utilizes the WebGL API. It handles scenes, rendering, objects, loaders for 3D models, and animations. This will be needed to utilize 3D objects that we make and to display them properly.
@@ -20,14 +22,14 @@
 - For the language, we will be using JavaScript
 - CSS & HTML for testing and possibly UI elements
 
-### Tools:
+### Tools
 
 - **Blender** or **BlockBench** can be used to create 3D assets to be used in the game, and will be rendered with the help of three.js. BlockBench also has tools for texturing and is easier to pick up.
 - Texturing and creating 2D assets can be done through readily available art programs like **Photoshop**, **Gimp**, **Krita**, etc.
 - **Github Co-Pilot** can be used to help maintain code readability & formating, while also being helpful for code autocomplete and comments.
 - **Deno** will be used to help with testing the game (using `deno task dev`) and will also help with formatting (`deno task fmt`).
 
-### Generative AI:
+### Generative AI
 
 - Allowed uses: GitHub Copilot (in moderation).
 - Grey Area: Using it to help write specific functions or help spot code smells. Using it to suggest project overview and step-by-step planning.
@@ -38,20 +40,20 @@
 
 Our outlook for this project is to build a small point and click adventure game that uses 3D physics as a core puzzle mechanic. We are hoping to center the game around a pinball game with portals as our physics puzzle. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
 
-# Devlog Entry - 11/20/2025
+## Devlog Entry - 11/20/2025
 
 ## Progress Notes
 
-_from collabarative session at noon with Joshua & Elijah_
+- _from collabarative session at noon with Joshua & Elijah_
 
 - The repository has been initialized with all the files and libaries that we will need to start creating our game. The files that will contain most of our code are here:
   - `index.html`: Created this file and included a title, group member names, and a scene container for the **Three.js** canvas.
   - `boot.js`: Contains any imports and will also import assets in the future.
   - `main.js`: Created a simple scene using **Three.js** with a static camera and no objects. This can be a starting point for the team to figure out how to use **Three.js** and to continue making progress on the game.
 
-# Devlog Entry - 11/21/2025
+## Devlog Entry - 11/21/2025
 
-_from collabarative session at noon with Joshua & Brody & Tina_
+- _from collabarative session at noon with Joshua & Brody & Tina_
 
 - Ammo.js has been imported and RigidBody class has been created to implement 3d game physics
 
@@ -102,7 +104,7 @@ _from collabarative session at noon with Joshua & Brody & Tina_
 - **Material System**: Using `MeshStandardMaterial` for physically-based rendering with roughness and metalness properties
 - **Dev Container**: Added `.devcontainer/devcontainer.json` for auto installing DENO
 
-# Devlog Entry - 11/22/2025
+## Devlog Entry - 11/22/2025
 
 ### Point-and-Click Controls
 
@@ -135,3 +137,5 @@ _from collabarative session at noon with Joshua & Brody & Tina_
 - **Wall**: Vertical gray plane at z=-10, centered at y=0, aligned with collision box (20x20x1)
 - **Red Cube**: Dynamic object (mass=10) for testing physics interactions
 - **Lighting**: Ambient (60%) + directional light with shadows
+
+## Team REFLECTION
