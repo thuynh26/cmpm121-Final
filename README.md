@@ -1,6 +1,6 @@
 # Final Project
 
-## Devlog Entry - 11/14/2025
+## F1 Devlog Entry - 11/14/2025
 
 ## Introducing the Team
 
@@ -38,11 +38,9 @@
 
 ## Outlook
 
-Our outlook for this project is to build a small point and click adventure game that uses 3D physics as a core puzzle mechanic. We are hoping to center the game around a pinball game with portals as our physics puzzle. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
+Our outlook for this project is to build a small tspace themed point and click escape room game that uses 3D physics as a core puzzle mechanic. The player will be able move between rooms, interact with objects, and manage an inventory of items that matter across scenes. A key goal is to design at least one physics based puzzle where the player must throw or launch objects in 3D space (under gravity and collisions from Ammo.js) to hit specific targets or trigger mechanisms. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
 
-## Devlog Entry - 11/20/2025
-
-## Progress Notes
+## F1 Devlog Entry - 11/20/2025
 
 - _from collabarative session at noon with Joshua & Elijah_
 
@@ -51,7 +49,7 @@ Our outlook for this project is to build a small point and click adventure game 
   - `boot.js`: Contains any imports and will also import assets in the future.
   - `main.js`: Created a simple scene using **Three.js** with a static camera and no objects. This can be a starting point for the team to figure out how to use **Three.js** and to continue making progress on the game.
 
-## Devlog Entry - 11/21/2025
+## F1 Devlog Entry - 11/21/2025
 
 - _from collabarative session at noon with Joshua & Brody & Tina_
 
@@ -104,7 +102,7 @@ Our outlook for this project is to build a small point and click adventure game 
 - **Material System**: Using `MeshStandardMaterial` for physically-based rendering with roughness and metalness properties
 - **Dev Container**: Added `.devcontainer/devcontainer.json` for auto installing DENO
 
-## Devlog Entry - 11/22/2025
+## F1 Devlog Entry - 11/22/2025
 
 ### Point-and-Click Controls
 
@@ -138,4 +136,35 @@ Our outlook for this project is to build a small point and click adventure game 
 - **Red Cube**: Dynamic object (mass=10) for testing physics interactions
 - **Lighting**: Ambient (60%) + directional light with shadows
 
-## Team REFLECTION
+## F1 Team REFLECTION
+
+## F2 Devlog Entry - 11/28/2025
+
+### 3D rendering and physics simulation
+
+- Still using `three.js` for 3D rendering and `ammo.js` for physics simulation.
+- Scene is built from geometric planes, boxes, and spheres.
+- `ammo.js` is initialized into a `btDiscreteDynamicsWorld` with gravity set to (0, -9.8, 0).
+- Using a `RigidBody` helper class for creating box and sphere colliders.
+
+### Specifc object interactions
+
+- Player can interact with specific meshes in the scene (door and picking up and throwing an object).
+- On left-click, we project the mouse position into 3D, intersect it against scene objects, and then inspect the clicked mesh’s `userData`.
+
+### Inventory system
+
+- Player can up pickable mesh (e.g. the red cube or the sphere) -> its rigid body is removed from the physics world and stored in the inventory.
+- Items in the inventory can be visually seen in the bottom right corner of view.
+
+### Physic based puzzle
+
+- In Room 2, players can pick up objects ( the red cube or the sphere) and then throw them using SPACE and change the objects color.
+- One key element is a red target wall; when the thrown object hits the target under certain correct conditions, it progresses by unlocking the next room.
+
+### Skill based puzzle success/failure
+
+- The puzzle outcome depends on how the player aims, positions, and changes their item.
+- To succeed, the player must:
+  - (1) select or recolor the correct item using the color buttons
+  - (2) aim and throw it so that it physically strikes the target wall. Missing the target or using the wrong color will fail to trigger the progress condition.
