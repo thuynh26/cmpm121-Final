@@ -750,7 +750,6 @@ export default function init() {
                     const messageElement = document.getElementById(
                       "target-message",
                     );
-                    sceneTwoCheck = true;
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
