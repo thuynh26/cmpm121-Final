@@ -170,3 +170,9 @@ Looking back at our F1 progress, most of our effort went into the foundation wor
 ## F2 Team REFLECTION
 
 As we implemented the F2 requirements, we've been able to clarify our scope and idea of our game. After F1, we knew that a pinball game idea was exciting but too vague and technically demanding for our timeline, and it was difficult to naturally intertwine it with point and click game play. As we implemented the F2 requirements, we found that our physics work, inventory implementation and use of multiple rooms would work really well for an escape room -esque game experience. That naturally led us to design a physics based puzzle where the player must pick up an item and then throw it accurately to hit a target that unlocks the path to the next room. This satisfies the requirement for a skill based physics puzzle that influences progress and can additionally be expanded on as the game grows. From here, we need to work on level designs, refactoring our code, and polishing our logic systems.
+
+## F3 Devlog Entry - 12/2/2025
+
+### mobile device controls
+
+- Now the game will check what kind of device is being used (touch screen / desktop) and will change the control scheme to match. The desktop controls are unchanged, but mobile users can now move with a joystick and change their view by sliding their finger on the screen. They also may interact with, switch, and throw held items using three buttons.

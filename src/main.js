@@ -1,5 +1,7 @@
 import RigidBody from "./physics/RigidBody.js";
 import { initWorldPhysics } from "./physics/worldInit.js";
+// Import mobile controls module for touch-based input (virtual joystick and buttons)
+import { MobileControls } from "./mobileControls.js";
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -518,13 +520,19 @@ export default function init() {
     renderer.shadowMap.enabled = true; // Enable shadows
     container.appendChild(renderer.domElement);
 
+    // =============== MOBILE CONTROLS INITIALIZATION =============== //
+    // Initialize mobile controls (virtual joystick + action buttons)
+    // This creates UI elements for touch devices and handles touch input
+    const mobileControls = new MobileControls();
+
     // Manual camera look controls (right-click drag to look around)
     let isDragging = false;
     let previousMouseX = 0;
     let previousMouseY = 0;
     const euler = new lib.Euler(0, 0, 0, "YXZ");
     const PI_2 = Math.PI / 2;
-    const sensitivity = 0.002;
+    const sensitivity = 0.002; // Mouse drag sensitivity for desktop
+    const mobileSensitivity = 0.003; // Touch drag sensitivity for mobile (slightly higher for better control)
 
     function onMouseDown(event) {
       if (event.button === 2) { // Right mouse button
@@ -795,6 +803,20 @@ export default function init() {
           fixedTimeStep,
         );
 
+        // =============== MOBILE TOUCH LOOK (CAMERA ROTATION) =============== //
+        // Handle mobile touch look (camera rotation from dragging on screen)
+        // getLookDelta() returns touch movement since last frame, then resets to zero
+        const lookDelta = mobileControls.getLookDelta();
+        if (lookDelta.x !== 0 || lookDelta.y !== 0) {
+          // Apply touch drag to camera rotation
+          euler.setFromQuaternion(camera.quaternion);
+          euler.y -= lookDelta.x * mobileSensitivity; // Horizontal rotation (yaw)
+          euler.x -= lookDelta.y * mobileSensitivity; // Vertical rotation (pitch)
+          // Clamp vertical rotation to prevent camera flipping
+          euler.x = Math.max(-PI_2 + 0.01, Math.min(PI_2 - 0.01, euler.x));
+          camera.quaternion.setFromEuler(euler);
+        }
+
         // Check for collisions
         const numManifolds = dispatcher.getNumManifolds();
         const collidingPairs = new Set();
@@ -904,12 +926,19 @@ export default function init() {
         }
       }
 
-      // Player movement
+      // =============== PLAYER MOVEMENT (KEYBOARD + MOBILE JOYSTICK) =============== //
       const moveDir = new Vector3();
 
+      // Get mobile joystick input (returns {x, y} normalized values from -1 to 1)
+      // x = left/right strafe, y = forward/backward movement
+      const joystickMove = mobileControls.getMovement();
+
+      // Check if player is trying to move (either keyboard or joystick input)
+      // Dead zone of 0.1 prevents drift from small touch movements
       if (
         moveState.forward || moveState.back ||
-        moveState.left || moveState.right
+        moveState.left || moveState.right ||
+        Math.abs(joystickMove.x) > 0.1 || Math.abs(joystickMove.y) > 0.1
       ) {
         const forward = new Vector3();
         camera.getWorldDirection(forward);
@@ -919,14 +948,148 @@ export default function init() {
         const right = new Vector3();
         right.crossVectors(forward, new Vector3(0, 1, 0)).normalize();
 
+        // Keyboard movement (WASD keys)
         if (moveState.forward) moveDir.add(forward);
         if (moveState.back) moveDir.sub(forward);
         if (moveState.left) moveDir.sub(right);
         if (moveState.right) moveDir.add(right);
 
+        // Mobile joystick movement (adds to keyboard input so both can work together)
+        // joystickMove.y controls forward/backward, joystickMove.x controls left/right strafe
+        moveDir.add(forward.clone().multiplyScalar(joystickMove.y));
+        moveDir.add(right.clone().multiplyScalar(joystickMove.x));
+
         if (moveDir.lengthSq() > 0) {
           moveDir.normalize();
           camera.position.addScaledVector(moveDir, moveSpeed * deltaTime);
+        }
+      }
+
+      // =============== MOBILE ACTION BUTTONS =============== //
+      // Handle mobile action buttons (interact, throw, switch)
+      // These provide touch alternatives to mouse/keyboard controls
+
+      // Interact button - same as left click (pick up items, use doors/buttons)
+      // wasButtonPressed() returns true only once per press, then resets
+      if (mobileControls.wasButtonPressed("interact")) {
+        // Perform raycast from center of screen (where crosshair is)
+        raycaster.setFromCamera(new Vector2(0, 0), camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        for (const intersect of intersects) {
+          const obj = intersect.object;
+
+          if (ObjectHelpers.isDoor(obj)) {
+            switchRoom(obj.userData.doorTarget);
+            if (inventory.heldItems) {
+              inventory.heldItems.visible = true;
+            }
+            break;
+          }
+
+          if (ObjectHelpers.isColorButton(obj)) {
+            if (inventory.heldItems.length > 0) {
+              const newColor = obj.userData.buttonColor;
+              const currentItem =
+                inventory.heldItems[inventory.currentItemIndex];
+              currentItem.mesh.material.color.setHex(newColor);
+              console.log(
+                `Changed item color to: #${
+                  newColor.toString(16).padStart(6, "0")
+                }`,
+              );
+            }
+            break;
+          }
+
+          if (ObjectHelpers.isPickable(obj)) {
+            const itemData = rigidBodies.find((rb) => rb.mesh === obj);
+            if (itemData && physicsWorld) {
+              physicsWorld.removeRigidBody(itemData.rigidBody.body_);
+              if (inventory.heldItems.length === 0) {
+                inventory.currentItemIndex = 0;
+              }
+              inventory.heldItems.push(itemData);
+              console.log(
+                `Picked up item! You now have ${inventory.heldItems.length} items.`,
+              );
+            }
+            break;
+          }
+        }
+      }
+
+      // Throw button - same as spacebar (throws currently selected item)
+      if (mobileControls.wasButtonPressed("throw")) {
+        if (inventory.heldItems.length > 0 && physicsWorld) {
+          const itemToThrow =
+            inventory.heldItems.splice(inventory.currentItemIndex, 1)[0];
+
+          if (
+            inventory.currentItemIndex >= inventory.heldItems.length &&
+            inventory.heldItems.length > 0
+          ) {
+            inventory.currentItemIndex = inventory.heldItems.length - 1;
+          }
+
+          const direction = new Vector3();
+          camera.getWorldDirection(direction);
+          const spawnPos = camera.position.clone().add(
+            direction.clone().multiplyScalar(2),
+          );
+          itemToThrow.mesh.position.copy(spawnPos);
+
+          const newRb = new RigidBody();
+          if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
+            newRb.createSphere(5, {
+              x: spawnPos.x,
+              y: spawnPos.y,
+              z: spawnPos.z,
+            }, 0.5);
+          } else {
+            newRb.createBox(
+              5,
+              { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+              { x: 0, y: 0, z: 0, w: 1 },
+              { x: 1, y: 1, z: 1 },
+            );
+          }
+          newRb.setFriction(0.5);
+          newRb.setRestitution(0.6);
+          physicsWorld.addRigidBody(newRb.body_);
+
+          const idx = rigidBodies.findIndex((rb) =>
+            rb.mesh === itemToThrow.mesh
+          );
+          if (idx !== -1) {
+            rigidBodies[idx].rigidBody = newRb;
+          }
+
+          const throwForce = direction.normalize().multiplyScalar(200);
+          const ammoForce = new Ammo.btVector3(
+            throwForce.x,
+            throwForce.y,
+            throwForce.z,
+          );
+          newRb.body_.applyCentralImpulse(ammoForce);
+          Ammo.destroy(ammoForce);
+
+          console.log(
+            `Threw item! ${inventory.heldItems.length} items remaining.`,
+          );
+        }
+      }
+
+      // Switch button - cycle through inventory items (same as mouse wheel scroll)
+      if (mobileControls.wasButtonPressed("switch")) {
+        if (inventory.heldItems.length > 1) {
+          inventory.currentItemIndex = (inventory.currentItemIndex + 1) %
+            inventory.heldItems.length;
+          console.log(
+            `Switched to item ${
+              inventory.currentItemIndex + 1
+            }/${inventory.heldItems.length}`,
+          );
         }
       }
 
