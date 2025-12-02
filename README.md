@@ -38,7 +38,7 @@
 
 ## Outlook
 
-Our outlook for this project is to build a small tspace themed point and click escape room game that uses 3D physics as a core puzzle mechanic. The player will be able move between rooms, interact with objects, and manage an inventory of items that matter across scenes. A key goal is to design at least one physics based puzzle where the player must throw or launch objects in 3D space (under gravity and collisions from Ammo.js) to hit specific targets or trigger mechanisms. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
+Our outlook for this project is to build a small space themed point and click escape room game that uses 3D physics as a core puzzle mechanic. The player will be able move between rooms, interact with objects, and manage an inventory of items that matter across scenes. A key goal is to design at least one physics based puzzle where the player must throw or launch objects in 3D space (under gravity and collisions from Ammo.js) to hit specific targets or trigger mechanisms. We expect the hardest and riskiest part to be getting all the moving parts to work together smoothly: managing multiple scenes/rooms, interactive objects, and a physics puzzle, all while keeping performance reasonable in the browser. Overall scope management is something we have to keep in mind as well and focus on implementing the small areas that we can reliably build, test, release multiple times.
 
 ## F1 Devlog Entry - 11/20/2025
 
@@ -103,6 +103,8 @@ Our outlook for this project is to build a small tspace themed point and click e
 
 ## F1 Team REFLECTION
 
+Looking back at our F1 progress, most of our effort went into the foundation work of getting `three.js` and `ammo.js` up and working with each other. As well as setting our our post-push automations and getting a working render of a simple 3D scene with working physics in the browser. Our original idea was a pinball game with portals as the main physics mechanic. We are realizng that the idea was exciting but also quite vague and technically difficult to pull off. During F1, we realized that it didn’t naturally give us a strong point and click adventure game play loop. Going forward, we need to redefine our game idea and anchor our physics ideas inside a more structured and comprehensive game loop.
+
 ## F2 Devlog Entry - 11/22/2025
 
 ### Point-and-Click Controls
@@ -164,3 +166,11 @@ Our outlook for this project is to build a small tspace themed point and click e
 
 - Inventory: players can scroll the mouse wheel to cycle between muliple items (previously could only hold one).
 - Movement: player can use WASD to move around scene.
+
+## F2 Team REFLECTION
+
+Since our F1 devlog, our overall game plan has become more focused and defined on creating space themed escape room inspired game. Early on, we weren't thinking mostly about a physics puzzle mechanic (launching or bouncing objects in interesting ways), but it was hard to anchor that in meaningful player goals and narrative. As we moved into F2 and started wiring up rooms, doors, and an inventory, it became clearer that a small sequence of rooms with a clear escape goal would make better use of point and click adventure tropes.
+
+## Reflection – F2
+
+As we implemented the F2 requirements, we've been able to clarify our scope and idea of our game. After F1, we knew that a pinball game idea was exciting but too vague and technically demanding for our timeline, and it was difficult to naturally intertwine it with point and click game play. As we implemented the F2 requirements, we found that our physics work, inventory implementation and use of multiple rooms would work really well for an escape room -esque game experience. That naturally led us to design a physics-based puzzle where the player must pick up an item and then throw it accurately to hit a target that unlocks the path to the next room. This satisfies the requirement for a skill based physics puzzle that influences progress and can additionally be expanded on as the game grows. From here, we need to work on level designs, refactoring our code, and polishing our logic systems.
