@@ -4,10 +4,10 @@
 
 ## Introducing the Team
 
-**Tool Lead:** Joshua
-**Engine Lead:** Elijah
-**Design Lead:** Brody
-**Test Lead:** Tina
+- **Tool Lead:** Joshua
+- **Engine Lead:** Elijah
+- **Design Lead:** Brody
+- **Test Lead:** Tina
 
 ## Tools and materials
 
@@ -19,8 +19,8 @@
 
 ### Language
 
-- For the language, we will be using JavaScript
-- CSS & HTML for testing and possibly UI elements
+- For the language, we will be using JavaScript.
+- CSS & HTML for testing and possibly UI elements.
 
 ### Tools
 
@@ -53,74 +53,75 @@ Our outlook for this project is to build a small tspace themed point and click e
 
 - _from collabarative session at noon with Joshua & Brody & Tina_
 
-- Ammo.js has been imported and RigidBody class has been created to implement 3d game physics
+- Ammo.js has been imported and RigidBody class has been created to implement 3d game physics.
 
 ### 3D Environment Setup
 
 - **3D Scene Objects**: Added a basic 3D environment with multiple objects to the scene:
-  - Green ground plane (20x20 units) positioned below the grid
-  - Red cube positioned at (-2, 0.5, 0)
+  - Green ground plane (20x20 units) positioned below the grid.
+  - Red cube positioned at (-2, 0.5, 0).
   - Additional placeholder objects for environment building
-  - Grid helper for spatial reference
+  - Grid helper for spatial reference.
 
 ### Lighting System
 
-- **Ambient Light**: Soft overall illumination (60% intensity) for base visibility
-- **Directional Light**: Sunlight simulation positioned at (5, 10, 7.5) with shadow casting enabled
-- **Shadows**: Enabled shadow mapping in the WebGL renderer for realistic depth
-- **Background**: Changed scene background from black to sky blue (0x87CEEB)
+- **Ambient Light**: Soft overall illumination (60% intensity) for base visibility.
+- **Directional Light**: Sunlight simulation positioned at (5, 10, 7.5) with shadow casting enabled.
+- **Shadows**: Enabled shadow mapping in the WebGL renderer for realistic depth.
+- **Background**: Changed scene background from black to sky blue (0x87CEEB).
 
 ### Physics Integration (Ammo.js)
 
 - **Physics World Initialization**:
-  - Created `btDiscreteDynamicsWorld` with proper collision detection and constraint solver
-  - Set gravity to -9.8 m/s² (realistic Earth gravity)
-  - Asynchronous initialization in `boot.js` ensures Ammo.js loads before app starts
+  - Created `btDiscreteDynamicsWorld` with proper collision detection and constraint solver.
+  - Set gravity to -9.8 m/s² (realistic Earth gravity).
+  - Asynchronous initialization in `boot.js` ensures Ammo.js loads before app starts.
 - **RigidBody Class**: Created wrapper class with methods for:
-  - `createBox()`: Create box-shaped physics bodies with configurable mass, position, rotation (quaternion), and size
-  - `createSphere()`: Create sphere-shaped physics bodies
-  - `setFriction()`, `setRestitution()`, `setRollingFriction()`: Physics material properties
+  - `createBox()`: Create box-shaped physics bodies with configurable mass, position, rotation (quaternion), and size.
+  - `createSphere()`: Create sphere-shaped physics bodies.
+  - `setFriction()`, `setRestitution()`, `setRollingFriction()`: Physics material properties.
 - **Ground Physics Body**:
-  - Static rigid body (mass = 0) positioned at y = -1 with proper quaternion rotation
+  - Static rigid body (mass = 0) positioned at y = -1 with proper quaternion rotation.
   - Synchronized with visual mesh for accurate collision detection
-- **Physics Loop**: Animation loop now steps physics simulation and syncs Three.js mesh transforms with physics body transforms
+- **Physics Loop**: Animation loop now steps physics simulation and syncs Three.js mesh transforms with physics body transforms.
 
 ### Camera Controls (OrbitControls)
 
 - **OrbitControls Import**: Added from `three/examples/jsm/controls/OrbitControls.js`
 - **Features**:
-  - Left-click drag to rotate camera around the scene
-  - Right-click drag to pan
-  - Scroll wheel to zoom (constrained between 2-20 units)
-  - Smooth damping enabled for natural camera movement
-  - Control updates integrated into animation loop
-    Credit goes to
+  - Left-click drag to rotate camera around the scene.
+  - Right-click drag to pan.
+  - Scroll wheel to zoom (constrained between 2-20 units).
+  - Smooth damping enabled for natural camera movement.
+  - Control updates integrated into animation loop.
 
 ### Technical Improvements
 
-- **Antialiasing**: Enabled for smoother visual rendering
-- **Material System**: Using `MeshStandardMaterial` for physically-based rendering with roughness and metalness properties
-- **Dev Container**: Added `.devcontainer/devcontainer.json` for auto installing DENO
+- **Antialiasing**: Enabled for smoother visual rendering.
+- **Material System**: Using `MeshStandardMaterial` for physically-based rendering with roughness and metalness properties.
+- **Dev Container**: Added `.devcontainer/devcontainer.json` for auto installing DENO.
 
-## F1 Devlog Entry - 11/22/2025
+## F1 Team REFLECTION
+
+## F2 Devlog Entry - 11/22/2025
 
 ### Point-and-Click Controls
 
-- **Manual Camera System**: Custom first-person look controls with right-click drag (no WASD movement)
-- **Camera Position**: Fixed at (0, 1.6, 3) with Euler angle rotation and vertical clamping (±89°)
-- **Mouse Sensitivity**: 0.002 with proper delta tracking to prevent snapping issues
+- **Manual Camera System**: Custom first-person look controls with right-click drag (no WASD movement).
+- **Camera Position**: Fixed at (0, 1.6, 3) with Euler angle rotation and vertical clamping (±89°).
+- **Mouse Sensitivity**: 0.002 with proper delta tracking to prevent snapping issues.
 
 ### Interactive Object System
 
-- **Clickable Sphere**: Yellow emissive sphere (0.5 radius) at (0, 2, 0) with physics (mass=5)
-- **Raycasting**: Left-click detection converts screen coordinates to world ray for object intersection
-- **Inventory System**: Pick up items (left-click), hold reference, throw with SPACE key
+- **Clickable Sphere**: Yellow emissive sphere (0.5 radius) at (0, 2, 0) with physics (mass=5).
+- **Raycasting**: Left-click detection converts screen coordinates to world ray for object intersection.
+- **Inventory System**: Pick up items (left-click), hold reference, throw with SPACE key.
 
 ### Inventory & Physics Mechanics
 
-- **Pickup**: Left-click removes object from physics world and stores in inventory (1 item max)
-- **Held Item Display**: Item positioned in bottom-right of camera view, follows look direction
-- **Throw**: SPACE spawns item 2 units ahead, recreates physics body, applies 1000-unit impulse in camera direction
+- **Pickup**: Left-click removes object from physics world and stores in inventory (1 item max).
+- **Held Item Display**: Item positioned in bottom-right of camera view, follows look direction.
+- **Throw**: SPACE spawns item 2 units ahead, recreates physics body, applies 1000-unit impulse in camera direction.
 
 ### Physics Implementation
 
@@ -136,26 +137,7 @@ Our outlook for this project is to build a small tspace themed point and click e
 - **Red Cube**: Dynamic object (mass=10) for testing physics interactions
 - **Lighting**: Ambient (60%) + directional light with shadows
 
-## F1 Team REFLECTION
-
 ## F2 Devlog Entry - 11/28/2025
-
-### 3D rendering and physics simulation
-
-- Still using `three.js` for 3D rendering and `ammo.js` for physics simulation.
-- Scene is built from geometric planes, boxes, and spheres.
-- `ammo.js` is initialized into a `btDiscreteDynamicsWorld` with gravity set to (0, -9.8, 0).
-- Using a `RigidBody` helper class for creating box and sphere colliders.
-
-### Specifc object interactions
-
-- Player can interact with specific meshes in the scene (door and picking up and throwing an object).
-- On left-click, we project the mouse position into 3D, intersect it against scene objects, and then inspect the clicked mesh’s `userData`.
-
-### Inventory system
-
-- Player can up pickable mesh (e.g. the red cube or the sphere) -> its rigid body is removed from the physics world and stored in the inventory.
-- Items in the inventory can be visually seen in the bottom right corner of view.
 
 ### Physic based puzzle
 
@@ -168,3 +150,17 @@ Our outlook for this project is to build a small tspace themed point and click e
 - To succeed, the player must:
   - (1) select or recolor the correct item using the color buttons
   - (2) aim and throw it so that it physically strikes the target wall. Missing the target or using the wrong color will fail to trigger the progress condition.
+
+### Moving between scenes
+
+- We have a simple room system with three rooms: `room1`, `room2`, and `room3`.
+- Only the current room’s group is visible at a time. Door meshes in each room are tagged via `userData` as doors with a `doorTarget` field. When the player raycasts and clicks on a door, the `switchRoom()` function hides the current room, shows the target room, and repositions the camera to a starting position.
+
+### Conclusive Ending
+
+- Right now, when the puzzle is satisfied, a simple win message appears on the website
+
+### Additional implementations
+
+- Inventory: players can scroll the mouse wheel to cycle between muliple items (previously could only hold one).
+- Movement: player can use WASD to move around scene.
