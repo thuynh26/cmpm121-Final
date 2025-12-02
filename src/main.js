@@ -78,9 +78,6 @@ export default function init() {
     const scene = new Scene();
     scene.background = new Color(0x87CEEB); // Sky blue background
 
-    const sceneTwo = new Scene();
-    sceneTwo.background = new Color(0xFF0000); // Sky blue background
-
     const sceneThree = new Scene();
     sceneThree.background = new Color(0x00FF00); // Sky green background
 
@@ -89,7 +86,6 @@ export default function init() {
     const grid1 = new GridHelper(10, 10); // size 10, 10 divisions
     grid1.position.y = 0; // place grid at world origin
     scene.add(grid1);
-    sceneTwo.add(grid1);
 
     // Add lighting to the scene
     // Ambient light provides soft overall illumination
@@ -106,6 +102,7 @@ export default function init() {
     const rooms = {
       room1: new lib.Group(), // the starting room
       room2: new lib.Group(),
+      room3: new lib.Group(),
     };
     let currentRoom = "room1";
 
@@ -113,6 +110,9 @@ export default function init() {
     rooms.room1.visible = true;
 
     scene.add(rooms.room2);
+    rooms.room2.visible = false;
+
+    scene.add(rooms.room3);
     rooms.room2.visible = false;
 
     // =============== ROOM 1 =============== //
@@ -171,7 +171,6 @@ export default function init() {
     ground.position.y = 0;
     ground.receiveShadow = true;
     scene.add(ground);
-    sceneTwo.add(ground);
     rooms.room2.add(ground);
 
     // Create physics body for the ground (mass 0 = static/immovable object)
@@ -238,7 +237,7 @@ export default function init() {
     // Create a wall plane
     const targetGeometry = new PlaneGeometry(5, 5);
     const targetMaterial = new MeshStandardMaterial({
-      color: 0xf01b0c, // Wall gray
+      color: 0xff0000, // red
       roughness: 0.8,
       metalness: 0.2,
     });
@@ -328,6 +327,101 @@ export default function init() {
       console.log("Sphere physics body added at y=2, mass=5");
     }
 
+    // =============== ROOM 3 =============== //
+    // Add a simple grid so there's some visuals to see when loading the page.
+    // This should be removed after adding actual models to the scene.
+    const grid3 = new GridHelper(10, 10); // size 10, 10 divisions
+    grid2.position.y = 0; // place grid at world origin
+    rooms.room3.add(grid3);
+
+    // Create a ground plane
+    const ground2 = new Mesh(groundGeometry, groundMaterial);
+    ground2.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+    ground2.position.y = 0;
+    ground2.receiveShadow = true;
+    rooms.room3.add(ground2);
+
+    // Create physics body for the ground (mass 0 = static/immovable object)
+    if (physicsWorld) {
+      const rbGround = new RigidBody();
+      // Create horizontal ground: wide in X and Z, thin in Y (no rotation needed)
+      // Position at y=0, size is 20x1x20 (the y=1 makes it 0.5 units thick centered at y=0)
+      rbGround.createBox(0, { x: 0, y: 0, z: 0 }, {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+      }, {
+        x: 20,
+        y: 0,
+        z: 20,
+      });
+      rbGround.setFriction(1.0);
+      rbGround.setRestitution(0.2);
+      physicsWorld.addRigidBody(rbGround.body_);
+      console.log("Ground physics body: box at y=0, size 20x1x20 (unrotated)");
+    }
+
+    // Door to go from Room 2 -> Room 1 (behind the player)
+    const doorRoom3To2 = doorRoom1To2.clone();
+    doorRoom3To2.position.set(0, 1.5, 20);
+    ObjectHelpers.makeDoor(doorRoom3To2, "room2");
+    rooms.room3.add(doorRoom3To2);
+
+    // Create a wall plane
+    const wall2 = new Mesh(wallGeometry, wallMaterial);
+    wall2.position.set(0, 0, -10); // Position wall at back, centered at ground
+    wall2.receiveShadow = true;
+    rooms.room3.add(wall2);
+
+    // Create physics body for the wall (mass 0 = static/immovable object)
+    if (physicsWorld) {
+      const rbWall = new RigidBody();
+      // Create vertical wall: wide in X and Y, thin in Z
+      // Position at z=-10, y=0 (centered at ground), size is 20x20x1 (thin in Z direction)
+      rbWall.createBox(0, { x: 0, y: 0, z: -10 }, {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+      }, {
+        x: 20,
+        y: 20,
+        z: 5,
+      });
+      rbWall.setFriction(1.0);
+      rbWall.setRestitution(0.2);
+      physicsWorld.addRigidBody(rbWall.body_);
+      rigidBodies.push({ mesh: wall, rigidBody: rbWall });
+      console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
+    }
+
+    // Create a wall plane
+    const targetWall2 = new Mesh(targetGeometry, targetMaterial);
+    targetWall2.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
+    targetWall2.receiveShadow = true;
+    // Create physics body for the wall (mass 0 = static/immovable object)
+    if (physicsWorld) {
+      const rbtargetWall2 = new RigidBody();
+      // Create vertical target: 5x5 plane, positioned so bottom edge is at ground (y=0)
+      // Center at y=2.5 so it spans from y=0 to y=5
+      rbtargetWall2.createBox(1, { x: 0, y: 2.5, z: -9.9 }, {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+      }, {
+        x: 5,
+        y: 5,
+        z: 1,
+      });
+      rbtargetWall2.setFriction(1.0);
+      rbtargetWall2.setRestitution(0.2);
+      physicsWorld.addRigidBody(rbtargetWall2.body_);
+      rigidBodies.push({ mesh: targetWall2, rigidBody: rbtargetWall2 });
+      console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
+    }
+    rooms.room3.add(targetWall2);
     // =============== Color Buttons =============== //
     // Create small cube buttons for changing colors
     const buttonGeometry = new BoxGeometry(0.5, 0.5, 0.5);
@@ -397,6 +491,7 @@ export default function init() {
 
     // ============== ROOM SWITCHING HELPER ==============
     function switchRoom(nextRoom) {
+      console.log("tried siwtching rooms");
       if (!rooms[nextRoom]) return;
 
       rooms[currentRoom].visible = false;
@@ -407,6 +502,8 @@ export default function init() {
         camera.position.set(0, 1.6, 5);
       } else if (currentRoom === "room2") {
         camera.position.set(0, 1.6, 8);
+      } else if (currentRoom === "room3") {
+        camera.position.set(0, 1.6, 11);
       }
     }
 
@@ -746,14 +843,33 @@ export default function init() {
                       obj1.mesh === targetWall) ||
                     (obj1.mesh === clickableSphere && obj0.mesh === targetWall)
                   ) {
-                    console.log("collidededed");
                     const messageElement = document.getElementById(
                       "target-message",
                     );
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
+                      console.log(obj0.mesh.material.color);
                     }
+                  }
+
+                  if (
+                    ((obj0.mesh === redCube &&
+                      obj1.mesh === targetWall) ||
+                      (obj1.mesh === redCube && obj0.mesh === targetWall)) &&
+                    (obj1.mesh.material.color.getHex() ==
+                      obj0.mesh.material.color.getHex())
+                  ) {
+                    const messageElement = document.getElementById(
+                      "target-message",
+                    );
+                    if (messageElement) {
+                      messageElement.style.display = "block";
+                      console.log("MATCHING COLOR!");
+                    }
+                    switchRoom("room3");
+                    console.log(obj0.mesh.material.color);
+                    console.log(obj1.mesh.material.color);
                   }
 
                   // You can add custom collision responses here
