@@ -113,7 +113,7 @@ export default function init() {
     rooms.room2.visible = false;
 
     scene.add(rooms.room3);
-    rooms.room2.visible = false;
+    rooms.room3.visible = false;
 
     // =============== ROOM 1 =============== //
     const room1FloorGeo = new PlaneGeometry(10, 10);
@@ -228,7 +228,7 @@ export default function init() {
         z: 5,
       });
       rbWall.setFriction(1.0);
-      rbWall.setRestitution(0.2);
+      rbWall.setRestitution(0.001);
       physicsWorld.addRigidBody(rbWall.body_);
       rigidBodies.push({ mesh: wall, rigidBody: rbWall });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
@@ -251,7 +251,7 @@ export default function init() {
       const rbtargetWall = new RigidBody();
       // Create vertical target: 5x5 plane, positioned so bottom edge is at ground (y=0)
       // Center at y=2.5 so it spans from y=0 to y=5
-      rbtargetWall.createBox(1, { x: 0, y: 2.5, z: -9.9 }, {
+      rbtargetWall.createBox(10, { x: 0, y: 2.5, z: -9.9 }, {
         x: 0,
         y: 0,
         z: 0,
@@ -278,7 +278,7 @@ export default function init() {
     ObjectHelpers.makePickable(redCube);
 
     scene.add(redCube);
-    rooms.room2.add(redCube);
+    //rooms.add(redCube);
 
     if (physicsWorld) {
       const rbredCube = new RigidBody();
@@ -313,7 +313,7 @@ export default function init() {
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
     ObjectHelpers.makePickable(clickableSphere);
-    rooms.room2.add(clickableSphere);
+    scene.add(clickableSphere);
 
     // Add physics body for sphere
     let sphereRigidBody = null;
@@ -397,7 +397,7 @@ export default function init() {
     }
 
     // Create a wall plane
-    const targetWall2 = new Mesh(targetGeometry, targetMaterial);
+    /*const targetWall2 = new Mesh(targetGeometry, targetMaterial);
     targetWall2.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
     targetWall2.receiveShadow = true;
     // Create physics body for the wall (mass 0 = static/immovable object)
@@ -421,7 +421,7 @@ export default function init() {
       rigidBodies.push({ mesh: targetWall2, rigidBody: rbtargetWall2 });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
     }
-    rooms.room3.add(targetWall2);
+    rooms.room3.add(targetWall2);*/
     // =============== Color Buttons =============== //
     // Create small cube buttons for changing colors
     const buttonGeometry = new BoxGeometry(0.5, 0.5, 0.5);
@@ -434,7 +434,7 @@ export default function init() {
     const redButton = new Mesh(buttonGeometry, redButtonMaterial);
     redButton.position.set(-3, 1, -2);
     ObjectHelpers.makeColorButton(redButton, 0xff0000);
-    rooms.room2.add(redButton);
+    rooms.room1.add(redButton);
 
     // Green color button
     const greenButtonMaterial = new MeshStandardMaterial({
@@ -444,7 +444,7 @@ export default function init() {
     const greenButton = new Mesh(buttonGeometry, greenButtonMaterial);
     greenButton.position.set(-2, 1, -2);
     ObjectHelpers.makeColorButton(greenButton, 0x00ff00);
-    rooms.room2.add(greenButton);
+    rooms.room1.add(greenButton);
 
     // Blue color button
     const blueButtonMaterial = new MeshStandardMaterial({
@@ -454,7 +454,7 @@ export default function init() {
     const blueButton = new Mesh(buttonGeometry, blueButtonMaterial);
     blueButton.position.set(-1, 1, -2);
     ObjectHelpers.makeColorButton(blueButton, 0x0000ff);
-    rooms.room2.add(blueButton);
+    rooms.room1.add(blueButton);
 
     // Yellow color button
     const yellowButtonMaterial = new MeshStandardMaterial({
@@ -464,7 +464,7 @@ export default function init() {
     const yellowButton = new Mesh(buttonGeometry, yellowButtonMaterial);
     yellowButton.position.set(0, 1, -2);
     ObjectHelpers.makeColorButton(yellowButton, 0xffff00);
-    rooms.room2.add(yellowButton);
+    rooms.room1.add(yellowButton);
 
     // =============== Inventory and movement system =============== //
     const inventory = {
@@ -599,6 +599,10 @@ export default function init() {
         // Handle door interactions
         if (ObjectHelpers.isDoor(obj)) {
           switchRoom(obj.userData.doorTarget);
+          if (inventory.heldItems) {
+            inventory.heldItems.visible = true;
+          }
+          console.log(inventory.heldItems.length);
           return;
         }
 
@@ -868,6 +872,8 @@ export default function init() {
                       console.log("MATCHING COLOR!");
                     }
                     switchRoom("room3");
+                    groundMaterial.color.setHex(0x0000FF);
+                    wallMaterial.color.setHex(0x8F9779);
                     console.log(obj0.mesh.material.color);
                     console.log(obj1.mesh.material.color);
                   }
