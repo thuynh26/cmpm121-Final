@@ -19,15 +19,7 @@ export class InputManager {
     this.isDragging = false;
     this.previousMouseX = 0;
     this.previousMouseY = 0;
-    this.euler =
-      new (camera.constructor.prototype.constructor.name === "PerspectiveCamera"
-        ? globalThis.THREE.Euler
-        : Object)( // Fallback for testing
-        0,
-        0,
-        0,
-        "YXZ",
-      );
+    this.euler = new globalThis.THREE.Euler(0, 0, 0, "YXZ");
 
     // Raycasting for click detection
     this.raycaster = new globalThis.THREE.Raycaster();
