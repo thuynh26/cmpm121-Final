@@ -43,6 +43,8 @@ export class InputManager {
     this._onKeyDown = this._onKeyDown.bind(this);
     this._onKeyUp = this._onKeyUp.bind(this);
     this._onContextMenu = this._onContextMenu.bind(this);
+    this._onMouseLeave = this._onMouseLeave.bind(this);
+    this._onWindowBlur = this._onWindowBlur.bind(this);
 
     this._setupEventListeners();
   }
@@ -57,6 +59,13 @@ export class InputManager {
       "contextmenu",
       this._onContextMenu,
     );
+
+    // Mouse leave detection - stop dragging when cursor exits window
+    this.renderer.domElement.addEventListener("mouseleave", this._onMouseLeave);
+    document.addEventListener("mouseleave", this._onMouseLeave);
+
+    // Window blur detection - stop all actions when window loses focus
+    globalThis.addEventListener("blur", this._onWindowBlur);
 
     // Click interactions
     this.renderer.domElement.addEventListener("click", this._onMouseClick);
@@ -102,6 +111,26 @@ export class InputManager {
 
   _onContextMenu(event) {
     event.preventDefault();
+  }
+
+  _onMouseLeave() {
+    // Stop dragging when mouse leaves the window
+    if (this.isDragging) {
+      this.isDragging = false;
+      this._pendingLookDelta = null;
+    }
+  }
+
+  _onWindowBlur() {
+    // Reset all input states when window loses focus
+    this.isDragging = false;
+    this._pendingLookDelta = null;
+
+    // Reset all movement keys
+    this.moveState.forward = false;
+    this.moveState.back = false;
+    this.moveState.left = false;
+    this.moveState.right = false;
   }
 
   // =============== CLICK INTERACTIONS ===============
