@@ -1,6 +1,5 @@
 import RigidBody from "./physics/RigidBody.js";
 import { initWorldPhysics } from "./physics/worldInit.js";
-// Import mobile controls module for touch-based input (virtual joystick and buttons)
 import { MobileControls } from "./mobileControls.js";
 
 export default function init() {
@@ -522,8 +521,18 @@ export default function init() {
 
     // =============== MOBILE CONTROLS INITIALIZATION =============== //
     // Initialize mobile controls (virtual joystick + action buttons)
-    // This creates UI elements for touch devices and handles touch input
-    const mobileControls = new MobileControls();
+    // Only create on touch-enabled mobile devices
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                           ('ontouchstart' in window) || 
+                           (navigator.maxTouchPoints > 0);
+    
+    let mobileControls = null;
+    if (isMobileDevice) {
+      mobileControls = new MobileControls();
+      console.log("Mobile controls enabled for touch device");
+    } else {
+      console.log("Desktop mode - using keyboard/mouse controls");
+    }
 
     // Manual camera look controls (right-click drag to look around)
     let isDragging = false;
@@ -806,15 +815,17 @@ export default function init() {
         // =============== MOBILE TOUCH LOOK (CAMERA ROTATION) =============== //
         // Handle mobile touch look (camera rotation from dragging on screen)
         // getLookDelta() returns touch movement since last frame, then resets to zero
-        const lookDelta = mobileControls.getLookDelta();
-        if (lookDelta.x !== 0 || lookDelta.y !== 0) {
-          // Apply touch drag to camera rotation
-          euler.setFromQuaternion(camera.quaternion);
-          euler.y -= lookDelta.x * mobileSensitivity; // Horizontal rotation (yaw)
-          euler.x -= lookDelta.y * mobileSensitivity; // Vertical rotation (pitch)
-          // Clamp vertical rotation to prevent camera flipping
-          euler.x = Math.max(-PI_2 + 0.01, Math.min(PI_2 - 0.01, euler.x));
-          camera.quaternion.setFromEuler(euler);
+        if (mobileControls) {
+          const lookDelta = mobileControls.getLookDelta();
+          if (lookDelta.x !== 0 || lookDelta.y !== 0) {
+            // Apply touch drag to camera rotation
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= lookDelta.x * mobileSensitivity; // Horizontal rotation (yaw)
+            euler.x -= lookDelta.y * mobileSensitivity; // Vertical rotation (pitch)
+            // Clamp vertical rotation to prevent camera flipping
+            euler.x = Math.max(-PI_2 + 0.01, Math.min(PI_2 - 0.01, euler.x));
+            camera.quaternion.setFromEuler(euler);
+          }
         }
 
         // Check for collisions
@@ -931,7 +942,7 @@ export default function init() {
 
       // Get mobile joystick input (returns {x, y} normalized values from -1 to 1)
       // x = left/right strafe, y = forward/backward movement
-      const joystickMove = mobileControls.getMovement();
+      const joystickMove = mobileControls ? mobileControls.getMovement() : { x: 0, y: 0 };
 
       // Check if player is trying to move (either keyboard or joystick input)
       // Dead zone of 0.1 prevents drift from small touch movements
@@ -971,7 +982,7 @@ export default function init() {
 
       // Interact button - same as left click (pick up items, use doors/buttons)
       // wasButtonPressed() returns true only once per press, then resets
-      if (mobileControls.wasButtonPressed("interact")) {
+      if (mobileControls && mobileControls.wasButtonPressed("interact")) {
         // Perform raycast from center of screen (where crosshair is)
         raycaster.setFromCamera(new Vector2(0, 0), camera);
         const intersects = raycaster.intersectObjects(scene.children, true);
@@ -1020,7 +1031,7 @@ export default function init() {
       }
 
       // Throw button - same as spacebar (throws currently selected item)
-      if (mobileControls.wasButtonPressed("throw")) {
+      if (mobileControls && mobileControls.wasButtonPressed("throw")) {
         if (inventory.heldItems.length > 0 && physicsWorld) {
           const itemToThrow =
             inventory.heldItems.splice(inventory.currentItemIndex, 1)[0];
@@ -1081,7 +1092,7 @@ export default function init() {
       }
 
       // Switch button - cycle through inventory items (same as mouse wheel scroll)
-      if (mobileControls.wasButtonPressed("switch")) {
+      if (mobileControls && mobileControls.wasButtonPressed("switch")) {
         if (inventory.heldItems.length > 1) {
           inventory.currentItemIndex = (inventory.currentItemIndex + 1) %
             inventory.heldItems.length;
