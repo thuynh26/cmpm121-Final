@@ -1,6 +1,16 @@
 import RigidBody from "./physics/RigidBody.js";
 import { initWorldPhysics } from "./physics/worldInit.js";
 import { MobileControls } from "./mobileControls.js";
+import { InputManager } from "./systems/InputManager.js";
+import {
+  Camera as CameraConfig,
+  Colors,
+  InventoryDisplay,
+  Lighting,
+  Movement,
+  Physics as PhysicsConfig,
+  Renderer as RendererConfig,
+} from "./config/gameConstants.js";
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -40,8 +50,6 @@ export default function init() {
       Mesh,
       DirectionalLight,
       AmbientLight,
-      Raycaster,
-      Vector2,
       Vector3,
     } = lib;
 
@@ -77,10 +85,10 @@ export default function init() {
 
     // Create a scene in Three.jsand set a background color.
     const scene = new Scene();
-    scene.background = new Color(0x87CEEB); // Sky blue background
+    scene.background = new Color(Colors.SKY_BLUE);
 
     const sceneThree = new Scene();
-    sceneThree.background = new Color(0x00FF00); // Sky green background
+    sceneThree.background = new Color(Colors.GREEN);
 
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
@@ -90,12 +98,22 @@ export default function init() {
 
     // Add lighting to the scene
     // Ambient light provides soft overall illumination
-    const ambientLight = new AmbientLight(0xffffff, 0.6);
+    const ambientLight = new AmbientLight(
+      Colors.WHITE,
+      Lighting.AMBIENT_INTENSITY,
+    );
     scene.add(ambientLight);
 
     // Directional light simulates sunlight
-    const directionalLight = new DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7.5);
+    const directionalLight = new DirectionalLight(
+      Colors.WHITE,
+      Lighting.DIRECTIONAL_INTENSITY,
+    );
+    directionalLight.position.set(
+      Lighting.DIRECTIONAL_POSITION.x,
+      Lighting.DIRECTIONAL_POSITION.y,
+      Lighting.DIRECTIONAL_POSITION.z,
+    );
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
@@ -119,7 +137,7 @@ export default function init() {
     // =============== ROOM 1 =============== //
     const room1FloorGeo = new PlaneGeometry(10, 10);
     const room1FloorMat = new MeshStandardMaterial({
-      color: 0x444444,
+      color: Colors.GRAY,
       roughness: 0.9,
       metalness: 0.1,
     });
@@ -132,7 +150,7 @@ export default function init() {
     // Back wall
     const room1BackWallGeo = new PlaneGeometry(10, 5);
     const room1BackWallMat = new MeshStandardMaterial({
-      color: 0x8888aa,
+      color: Colors.WALL_PURPLE,
       roughness: 0.8,
       metalness: 0.1,
     });
@@ -143,7 +161,7 @@ export default function init() {
     // Door from Room 1 -> Room 2
     const doorGeo = new BoxGeometry(1.5, 3, 0.2);
     const doorMat = new MeshStandardMaterial({
-      color: 0x3366ff,
+      color: Colors.DOOR_BLUE,
       roughness: 0.6,
       metalness: 0.2,
     });
@@ -163,7 +181,7 @@ export default function init() {
     // Create a ground plane
     const groundGeometry = new PlaneGeometry(20, 20);
     const groundMaterial = new MeshStandardMaterial({
-      color: 0x228B22, // Forest green
+      color: Colors.FOREST_GREEN,
       roughness: 0.8,
       metalness: 0.2,
     });
@@ -204,7 +222,7 @@ export default function init() {
     // Create a wall plane
     const wallGeometry = new PlaneGeometry(20, 20);
     const wallMaterial = new MeshStandardMaterial({
-      color: 0x6b6b6b, // Wall gray
+      color: Colors.WALL_GRAY,
       roughness: 0.8,
       metalness: 0.2,
     });
@@ -228,8 +246,8 @@ export default function init() {
         y: 20,
         z: 5,
       });
-      rbWall.setFriction(1.0);
-      rbWall.setRestitution(0.001);
+      rbWall.setFriction(PhysicsConfig.WALL_FRICTION);
+      rbWall.setRestitution(PhysicsConfig.WALL_RESTITUTION);
       physicsWorld.addRigidBody(rbWall.body_);
       rigidBodies.push({ mesh: wall, rigidBody: rbWall });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
@@ -262,8 +280,8 @@ export default function init() {
         y: 5,
         z: 1,
       });
-      rbtargetWall.setFriction(1.0);
-      rbtargetWall.setRestitution(0.2);
+      rbtargetWall.setFriction(PhysicsConfig.WALL_FRICTION);
+      rbtargetWall.setRestitution(PhysicsConfig.WALL_RESTITUTION);
       physicsWorld.addRigidBody(rbtargetWall.body_);
       rigidBodies.push({ mesh: targetWall, rigidBody: rbtargetWall });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
@@ -272,7 +290,7 @@ export default function init() {
     const cubeGeometry = new BoxGeometry(1, 1, 1);
 
     // Red cube
-    const redCubeMaterial = new MeshStandardMaterial({ color: 0xff0000 });
+    const redCubeMaterial = new MeshStandardMaterial({ color: Colors.RED });
     const redCube = new Mesh(cubeGeometry, redCubeMaterial);
     redCube.position.set(-2, 5, 0); // Set initial position to match physics body
     redCube.castShadow = true;
@@ -293,8 +311,8 @@ export default function init() {
         y: 1,
         z: 1,
       });
-      rbredCube.setFriction(0.5);
-      rbredCube.setRestitution(0.7);
+      rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
+      rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
       physicsWorld.addRigidBody(rbredCube.body_);
       rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
       console.log("Cube physics body added at y=5, mass=10");
@@ -303,8 +321,8 @@ export default function init() {
     // Create clickable sphere with physics
     const sphereGeometry = new SphereGeometry(0.5, 32, 32);
     const sphereMaterial = new MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0x444400,
+      color: Colors.YELLOW,
+      emissive: Colors.EMISSIVE_YELLOW,
       roughness: 0.3,
       metalness: 0.7,
     });
@@ -321,8 +339,8 @@ export default function init() {
     if (physicsWorld) {
       sphereRigidBody = new RigidBody();
       sphereRigidBody.createSphere(5, { x: 0, y: 2, z: 0 }, 0.5);
-      sphereRigidBody.setFriction(0.5);
-      sphereRigidBody.setRestitution(0.6);
+      sphereRigidBody.setFriction(PhysicsConfig.OBJECT_FRICTION);
+      sphereRigidBody.setRestitution(PhysicsConfig.SPHERE_RESTITUTION);
       physicsWorld.addRigidBody(sphereRigidBody.body_);
       rigidBodies.push({ mesh: clickableSphere, rigidBody: sphereRigidBody });
       console.log("Sphere physics body added at y=2, mass=5");
@@ -390,8 +408,8 @@ export default function init() {
         y: 20,
         z: 5,
       });
-      rbWall.setFriction(1.0);
-      rbWall.setRestitution(0.2);
+      rbWall.setFriction(PhysicsConfig.WALL_FRICTION);
+      rbWall.setRestitution(PhysicsConfig.WALL_RESTITUTION);
       physicsWorld.addRigidBody(rbWall.body_);
       rigidBodies.push({ mesh: wall, rigidBody: rbWall });
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
@@ -429,42 +447,42 @@ export default function init() {
 
     // Red color button
     const redButtonMaterial = new MeshStandardMaterial({
-      color: 0xff0000,
-      emissive: 0x440000,
+      color: Colors.RED,
+      emissive: Colors.EMISSIVE_RED,
     });
     const redButton = new Mesh(buttonGeometry, redButtonMaterial);
     redButton.position.set(-3, 1, -2);
-    ObjectHelpers.makeColorButton(redButton, 0xff0000);
+    ObjectHelpers.makeColorButton(redButton, Colors.RED);
     rooms.room1.add(redButton);
 
     // Green color button
     const greenButtonMaterial = new MeshStandardMaterial({
-      color: 0x00ff00,
-      emissive: 0x004400,
+      color: Colors.GREEN,
+      emissive: Colors.EMISSIVE_GREEN,
     });
     const greenButton = new Mesh(buttonGeometry, greenButtonMaterial);
     greenButton.position.set(-2, 1, -2);
-    ObjectHelpers.makeColorButton(greenButton, 0x00ff00);
+    ObjectHelpers.makeColorButton(greenButton, Colors.GREEN);
     rooms.room1.add(greenButton);
 
     // Blue color button
     const blueButtonMaterial = new MeshStandardMaterial({
-      color: 0x0000ff,
-      emissive: 0x000044,
+      color: Colors.BLUE,
+      emissive: Colors.EMISSIVE_BLUE,
     });
     const blueButton = new Mesh(buttonGeometry, blueButtonMaterial);
     blueButton.position.set(-1, 1, -2);
-    ObjectHelpers.makeColorButton(blueButton, 0x0000ff);
+    ObjectHelpers.makeColorButton(blueButton, Colors.BLUE);
     rooms.room1.add(blueButton);
 
     // Yellow color button
     const yellowButtonMaterial = new MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0x444400,
+      color: Colors.YELLOW,
+      emissive: Colors.EMISSIVE_YELLOW,
     });
     const yellowButton = new Mesh(buttonGeometry, yellowButtonMaterial);
     yellowButton.position.set(0, 1, -2);
-    ObjectHelpers.makeColorButton(yellowButton, 0xffff00);
+    ObjectHelpers.makeColorButton(yellowButton, Colors.YELLOW);
     rooms.room1.add(yellowButton);
 
     // =============== Inventory and movement system =============== //
@@ -473,20 +491,14 @@ export default function init() {
       currentItemIndex: 0, // Index of currently displayed item
     };
 
-    const moveState = {
-      forward: false,
-      back: false,
-      left: false,
-      right: false,
-    };
-    const moveSpeed = 5;
+    const moveSpeed = Movement.SPEED;
 
     // Create a perspective camera. The aspect ratio is from the container's size so the view matches the canvas dimensions.
     const camera = new PerspectiveCamera(
-      60,
+      CameraConfig.FOV,
       container.clientWidth / Math.max(container.clientHeight, 1),
-      0.1,
-      1000,
+      CameraConfig.NEAR_PLANE,
+      CameraConfig.FAR_PLANE,
     );
     // camera.position.set(0, 1.6, 5); // initial camera position (x,y,z)
 
@@ -500,11 +512,19 @@ export default function init() {
       rooms[currentRoom].visible = true;
 
       if (currentRoom === "room1") {
-        camera.position.set(0, 1.6, 5);
+        camera.position.set(
+          0,
+          CameraConfig.INITIAL_HEIGHT,
+          CameraConfig.INITIAL_DISTANCE,
+        );
       } else if (currentRoom === "room2") {
-        camera.position.set(0, 1.6, 8);
+        camera.position.set(
+          0,
+          CameraConfig.INITIAL_HEIGHT,
+          CameraConfig.ROOM2_INITIAL_DISTANCE,
+        );
       } else if (currentRoom === "room3") {
-        camera.position.set(0, 1.6, 11);
+        camera.position.set(0, CameraConfig.INITIAL_HEIGHT, 11);
       }
     }
 
@@ -515,7 +535,12 @@ export default function init() {
     // the renderer's canvas to the container element in index.html.
     const renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(
+      Math.min(
+        globalThis.devicePixelRatio || 1,
+        RendererConfig.MAX_PIXEL_RATIO,
+      ),
+    );
     renderer.shadowMap.enabled = true; // Enable shadows
     container.appendChild(renderer.domElement);
 
@@ -542,54 +567,11 @@ export default function init() {
       console.log("Desktop mode - using keyboard/mouse controls");
     }
 
-    // Manual camera look controls (right-click drag to look around)
-    let isDragging = false;
-    let previousMouseX = 0;
-    let previousMouseY = 0;
-    const euler = new lib.Euler(0, 0, 0, "YXZ");
-    const PI_2 = Math.PI / 2;
-    const sensitivity = 0.002; // Mouse drag sensitivity for desktop
-    const mobileSensitivity = 0.003; // Touch drag sensitivity for mobile (slightly higher for better control)
+    // =============== INPUT SYSTEM =============== //
+    // Initialize InputManager to handle all input
+    const inputManager = new InputManager(renderer, camera, mobileControls);
 
-    function onMouseDown(event) {
-      if (event.button === 2) { // Right mouse button
-        isDragging = true;
-        previousMouseX = event.clientX;
-        previousMouseY = event.clientY;
-      }
-    }
-
-    function onMouseMove(event) {
-      if (!isDragging) return;
-
-      const deltaX = event.clientX - previousMouseX;
-      const deltaY = event.clientY - previousMouseY;
-
-      previousMouseX = event.clientX;
-      previousMouseY = event.clientY;
-
-      euler.setFromQuaternion(camera.quaternion);
-      euler.y -= deltaX * sensitivity;
-      euler.x -= deltaY * sensitivity;
-      euler.x = Math.max(-PI_2 + 0.01, Math.min(PI_2 - 0.01, euler.x));
-      camera.quaternion.setFromEuler(euler);
-    }
-
-    function onMouseUp(event) {
-      if (event.button === 2) {
-        isDragging = false;
-      }
-    }
-
-    // Prevent context menu on right-click
-    renderer.domElement.addEventListener(
-      "contextmenu",
-      (e) => e.preventDefault(),
-    );
-
-    renderer.domElement.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    // Camera look sensitivity (stored for use in animate loop)
 
     // `onResize` keeps the camera projection and renderer size in sync with the container when the window is resized.
     function onResize() {
@@ -602,207 +584,128 @@ export default function init() {
     // Listen for resize events on the global scope so the canvas adapts.
     globalThis.addEventListener("resize", onResize);
 
-    // Set up raycasting for click detection
-    const raycaster = new Raycaster();
-    const mouse = new Vector2();
-
-    // Handle mouse clicks for picking up items
-    function onMouseClick(event) {
-      if (event.button !== 0) return; // Only left-click
-
-      // Calculate mouse position in normalized device coordinates
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      for (const intersect of intersects) {
-        const obj = intersect.object;
-
-        // Handle door interactions
-        if (ObjectHelpers.isDoor(obj)) {
-          switchRoom(obj.userData.doorTarget);
-          if (inventory.heldItems) {
-            inventory.heldItems.visible = true;
+    // Set up click handlers for InputManager
+    const _clickHandlers = {
+      onDoorClick: (targetRoom) => {
+        switchRoom(targetRoom);
+        if (inventory.heldItems) {
+          inventory.heldItems.visible = true;
+        }
+        console.log(inventory.heldItems.length);
+      },
+      onColorButtonClick: (newColor) => {
+        if (inventory.heldItems.length > 0) {
+          const currentItem = inventory.heldItems[inventory.currentItemIndex];
+          currentItem.mesh.material.color.setHex(newColor);
+          console.log(
+            `Changed item ${inventory.currentItemIndex + 1} to color: #${
+              newColor.toString(16).padStart(6, "0")
+            }`,
+          );
+        } else {
+          console.log("No items in inventory to change color");
+        }
+      },
+      onPickableClick: (obj) => {
+        const itemData = rigidBodies.find((rb) => rb.mesh === obj);
+        if (itemData && physicsWorld) {
+          physicsWorld.removeRigidBody(itemData.rigidBody.body_);
+          if (inventory.heldItems.length === 0) {
+            inventory.currentItemIndex = 0;
           }
-          console.log(inventory.heldItems.length);
-          return;
+          inventory.heldItems.push(itemData);
+          console.log(
+            `Picked up item! You now have ${inventory.heldItems.length} items. Press SPACE to throw.`,
+          );
+        }
+      },
+    };
+
+    // Set up throw handler for InputManager
+    inputManager.onThrowItem = () => {
+      if (inventory.heldItems.length > 0 && physicsWorld) {
+        const itemToThrow = inventory.heldItems.splice(
+          inventory.currentItemIndex,
+          1,
+        )[0];
+
+        if (
+          inventory.currentItemIndex >= inventory.heldItems.length &&
+          inventory.heldItems.length > 0
+        ) {
+          inventory.currentItemIndex = inventory.heldItems.length - 1;
         }
 
-        // Handle color button interactions
-        if (ObjectHelpers.isColorButton(obj)) {
-          if (inventory.heldItems.length > 0) {
-            const newColor = obj.userData.buttonColor;
-            const currentItem = inventory.heldItems[inventory.currentItemIndex];
-            currentItem.mesh.material.color.setHex(newColor);
-            console.log(
-              `Changed item ${inventory.currentItemIndex + 1} to color: #${
-                newColor.toString(16).padStart(6, "0")
-              }`,
-            );
-          } else {
-            console.log("No items in inventory to change color");
-          }
-          return;
+        const direction = new Vector3();
+        camera.getWorldDirection(direction);
+
+        const spawnPos = camera.position.clone().add(
+          direction.clone().multiplyScalar(Movement.THROW_SPAWN_DISTANCE),
+        );
+
+        itemToThrow.mesh.position.copy(spawnPos);
+
+        const newRb = new RigidBody();
+        if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
+          newRb.createSphere(
+            5,
+            { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+            0.5,
+          );
+        } else {
+          newRb.createBox(
+            5,
+            { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
+            { x: 0, y: 0, z: 0, w: 1 },
+            { x: 1, y: 1, z: 1 },
+          );
+        }
+        newRb.setFriction(PhysicsConfig.OBJECT_FRICTION);
+        newRb.setRestitution(PhysicsConfig.SPHERE_RESTITUTION);
+        physicsWorld.addRigidBody(newRb.body_);
+
+        const idx = rigidBodies.findIndex(
+          (rb) => rb.mesh === itemToThrow.mesh,
+        );
+        if (idx !== -1) {
+          rigidBodies[idx].rigidBody = newRb;
         }
 
-        // Handle pickable item interactions
-        if (ObjectHelpers.isPickable(obj)) {
-          const itemData = rigidBodies.find((rb) => rb.mesh === obj);
-          if (itemData && physicsWorld) {
-            // Remove from physics world
-            physicsWorld.removeRigidBody(itemData.rigidBody.body_);
+        const throwForce = direction.normalize().multiplyScalar(
+          Movement.THROW_FORCE,
+        );
+        const ammoForce = new Ammo.btVector3(
+          throwForce.x,
+          throwForce.y,
+          throwForce.z,
+        );
+        newRb.body_.applyCentralImpulse(ammoForce);
+        Ammo.destroy(ammoForce);
 
-            // Add to inventory
-            if (inventory.heldItems.length === 0) {
-              inventory.currentItemIndex = 0;
-            }
-            inventory.heldItems.push(itemData);
-
-            console.log(
-              `Picked up item! You now have ${inventory.heldItems.length} items. Press SPACE to throw.`,
-            );
-          }
-          return;
-        }
+        console.log(
+          `Threw item! ${inventory.heldItems.length} items remaining.`,
+        );
       }
-    }
+    };
 
-    // Handle keyboard input for throwing and movement
-    function onKeyDown(event) {
-      switch (event.code) {
-        case "KeyW":
-          moveState.forward = true;
-          break;
-        case "KeyS":
-          moveState.back = true;
-          break;
-        case "KeyA":
-          moveState.left = true;
-          break;
-        case "KeyD":
-          moveState.right = true;
-          break;
-        case "Space":
-          // Throw currently selected item if holding any
-          if (inventory.heldItems.length > 0 && physicsWorld) {
-            const itemToThrow =
-              inventory.heldItems.splice(inventory.currentItemIndex, 1)[0]; // Remove current item
-
-            // Adjust current index if needed
-            if (
-              inventory.currentItemIndex >= inventory.heldItems.length &&
-              inventory.heldItems.length > 0
-            ) {
-              inventory.currentItemIndex = inventory.heldItems.length - 1;
-            }
-
-            const direction = new Vector3();
-            camera.getWorldDirection(direction);
-
-            const spawnPos = camera.position.clone().add(
-              direction.clone().multiplyScalar(2),
-            );
-
-            // Update mesh position
-            itemToThrow.mesh.position.copy(spawnPos);
-
-            // Determine shape based on mesh geometry
-            const newRb = new RigidBody();
-            if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
-              newRb.createSphere(
-                5,
-                { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-                0.5,
-              );
-            } else {
-              // Default to box for other shapes
-              newRb.createBox(
-                5,
-                { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-                { x: 0, y: 0, z: 0, w: 1 },
-                { x: 1, y: 1, z: 1 },
-              );
-            }
-            newRb.setFriction(0.5);
-            newRb.setRestitution(0.6);
-            physicsWorld.addRigidBody(newRb.body_);
-
-            const idx = rigidBodies.findIndex(
-              (rb) => rb.mesh === itemToThrow.mesh,
-            );
-            if (idx !== -1) {
-              rigidBodies[idx].rigidBody = newRb;
-            }
-
-            // Apply throw force in camera direction
-            const throwForce = direction.normalize().multiplyScalar(200);
-            const ammoForce = new Ammo.btVector3(
-              throwForce.x,
-              throwForce.y,
-              throwForce.z,
-            );
-            newRb.body_.applyCentralImpulse(ammoForce);
-            Ammo.destroy(ammoForce);
-
-            console.log(
-              `Threw item! ${inventory.heldItems.length} items remaining.`,
-            );
-          }
-          break;
-      }
-    }
-
-    function onKeyUp(event) {
-      switch (event.code) {
-        case "KeyW":
-          moveState.forward = false;
-          break;
-        case "KeyS":
-          moveState.back = false;
-          break;
-        case "KeyA":
-          moveState.left = false;
-          break;
-        case "KeyD":
-          moveState.right = false;
-          break;
-      }
-    }
-
-    renderer.domElement.addEventListener("click", onMouseClick);
-    globalThis.addEventListener("keydown", onKeyDown);
-    globalThis.addEventListener("keyup", onKeyUp);
-
-    // Handle mouse wheel for cycling through inventory
-    function onMouseWheel(event) {
+    // Set up scroll handler for InputManager
+    inputManager.onScrollInventory = (deltaY) => {
       if (inventory.heldItems.length > 1) {
-        event.preventDefault();
-
-        if (event.deltaY > 0) {
-          // Scroll down - next item
+        if (deltaY > 0) {
           inventory.currentItemIndex = (inventory.currentItemIndex + 1) %
             inventory.heldItems.length;
-        } else if (event.deltaY < 0) {
-          // Scroll up - previous item
+        } else if (deltaY < 0) {
           inventory.currentItemIndex =
             (inventory.currentItemIndex - 1 + inventory.heldItems.length) %
             inventory.heldItems.length;
         }
-
         console.log(
           `Switched to item ${
             inventory.currentItemIndex + 1
           }/${inventory.heldItems.length}`,
         );
       }
-    }
-
-    renderer.domElement.addEventListener("wheel", onMouseWheel, {
-      passive: false,
-    });
+    };
 
     // Main render loop with physics updates
     const clock = new lib.Clock();
@@ -812,10 +715,10 @@ export default function init() {
       // Update physics world
       if (physicsWorld) {
         // Use fixed timestep for stable physics - cap deltaTime to prevent huge jumps
-        const fixedTimeStep = 1.0 / 60.0; // 60 FPS physics
-        const maxSubSteps = 10;
+        const fixedTimeStep = PhysicsConfig.FIXED_TIMESTEP;
+        const maxSubSteps = PhysicsConfig.MAX_SUBSTEPS;
         physicsWorld.stepSimulation(
-          Math.min(deltaTime, 0.1),
+          Math.min(deltaTime, PhysicsConfig.MAX_DELTATIME),
           maxSubSteps,
           fixedTimeStep,
         );
@@ -880,7 +783,6 @@ export default function init() {
                 const pairKey = [obj0, obj1].sort().join("-");
                 if (!collidingPairs.has(pairKey)) {
                   collidingPairs.add(pairKey);
-                  console.log("Collision: cube and ground are touching");
 
                   // Check if sphere hit the target wall
                   if (
@@ -945,21 +847,31 @@ export default function init() {
         }
       }
 
+      // =============== INPUT PROCESSING =============== //
+      // Process click interactions
+      inputManager.processClickInteractions(
+        scene,
+        ObjectHelpers,
+        _clickHandlers,
+      );
+
+      // Get camera look input and apply rotation
+      const lookDelta = inputManager.getLookDelta(
+        CameraConfig.LOOK_SENSITIVITY,
+        0.003,
+      );
+      inputManager.applyLookRotation(
+        lookDelta,
+        CameraConfig.MAX_PITCH,
+        CameraConfig.MIN_PITCH_OFFSET,
+      );
+
       // =============== PLAYER MOVEMENT (KEYBOARD + MOBILE JOYSTICK) =============== //
       const moveDir = new Vector3();
+      const movementInput = inputManager.getMovementInput();
 
-      // Get mobile joystick input (returns {x, y} normalized values from -1 to 1)
-      // x = left/right strafe, y = forward/backward movement
-      const joystickMove = mobileControls
-        ? mobileControls.getMovement()
-        : { x: 0, y: 0 };
-
-      // Check if player is trying to move (either keyboard or joystick input)
-      // Dead zone of 0.1 prevents drift from small touch movements
       if (
-        moveState.forward || moveState.back ||
-        moveState.left || moveState.right ||
-        Math.abs(joystickMove.x) > 0.1 || Math.abs(joystickMove.y) > 0.1
+        Math.abs(movementInput.x) > 0.01 || Math.abs(movementInput.y) > 0.01
       ) {
         const forward = new Vector3();
         camera.getWorldDirection(forward);
@@ -969,16 +881,9 @@ export default function init() {
         const right = new Vector3();
         right.crossVectors(forward, new Vector3(0, 1, 0)).normalize();
 
-        // Keyboard movement (WASD keys)
-        if (moveState.forward) moveDir.add(forward);
-        if (moveState.back) moveDir.sub(forward);
-        if (moveState.left) moveDir.sub(right);
-        if (moveState.right) moveDir.add(right);
-
-        // Mobile joystick movement (adds to keyboard input so both can work together)
-        // joystickMove.y controls forward/backward, joystickMove.x controls left/right strafe
-        moveDir.add(forward.clone().multiplyScalar(joystickMove.y));
-        moveDir.add(right.clone().multiplyScalar(joystickMove.x));
+        // Apply movement input (combined keyboard and joystick)
+        moveDir.add(forward.clone().multiplyScalar(movementInput.y));
+        moveDir.add(right.clone().multiplyScalar(movementInput.x));
 
         if (moveDir.lengthSq() > 0) {
           moveDir.normalize();
@@ -987,130 +892,41 @@ export default function init() {
       }
 
       // =============== MOBILE ACTION BUTTONS =============== //
-      // Handle mobile action buttons (interact, throw, switch)
-      // These provide touch alternatives to mouse/keyboard controls
-
-      // Interact button - same as left click (pick up items, use doors/buttons)
-      // wasButtonPressed() returns true only once per press, then resets
-      if (mobileControls && mobileControls.wasButtonPressed("interact")) {
-        // Perform raycast from center of screen (where crosshair is)
-        raycaster.setFromCamera(new Vector2(0, 0), camera);
-        const intersects = raycaster.intersectObjects(scene.children, true);
+      // Mobile buttons use the same handlers as keyboard/mouse
+      if (inputManager.wasMobileButtonPressed("interact")) {
+        // Simulate center screen click for mobile interact
+        const centerRaycast = new globalThis.THREE.Raycaster();
+        centerRaycast.setFromCamera(new Vector3(0, 0), camera);
+        const intersects = centerRaycast.intersectObjects(scene.children, true);
 
         for (const intersect of intersects) {
           const obj = intersect.object;
-
           if (ObjectHelpers.isDoor(obj)) {
-            switchRoom(obj.userData.doorTarget);
-            if (inventory.heldItems) {
-              inventory.heldItems.visible = true;
-            }
+            _clickHandlers.onDoorClick(obj.userData.doorTarget);
             break;
           }
-
           if (ObjectHelpers.isColorButton(obj)) {
-            if (inventory.heldItems.length > 0) {
-              const newColor = obj.userData.buttonColor;
-              const currentItem =
-                inventory.heldItems[inventory.currentItemIndex];
-              currentItem.mesh.material.color.setHex(newColor);
-              console.log(
-                `Changed item color to: #${
-                  newColor.toString(16).padStart(6, "0")
-                }`,
-              );
-            }
+            _clickHandlers.onColorButtonClick(obj.userData.buttonColor);
             break;
           }
-
           if (ObjectHelpers.isPickable(obj)) {
-            const itemData = rigidBodies.find((rb) => rb.mesh === obj);
-            if (itemData && physicsWorld) {
-              physicsWorld.removeRigidBody(itemData.rigidBody.body_);
-              if (inventory.heldItems.length === 0) {
-                inventory.currentItemIndex = 0;
-              }
-              inventory.heldItems.push(itemData);
-              console.log(
-                `Picked up item! You now have ${inventory.heldItems.length} items.`,
-              );
-            }
+            _clickHandlers.onPickableClick(obj);
             break;
           }
         }
       }
 
-      // Throw button - same as spacebar (throws currently selected item)
-      if (mobileControls && mobileControls.wasButtonPressed("throw")) {
-        if (inventory.heldItems.length > 0 && physicsWorld) {
-          const itemToThrow =
-            inventory.heldItems.splice(inventory.currentItemIndex, 1)[0];
-
-          if (
-            inventory.currentItemIndex >= inventory.heldItems.length &&
-            inventory.heldItems.length > 0
-          ) {
-            inventory.currentItemIndex = inventory.heldItems.length - 1;
-          }
-
-          const direction = new Vector3();
-          camera.getWorldDirection(direction);
-          const spawnPos = camera.position.clone().add(
-            direction.clone().multiplyScalar(2),
-          );
-          itemToThrow.mesh.position.copy(spawnPos);
-
-          const newRb = new RigidBody();
-          if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
-            newRb.createSphere(5, {
-              x: spawnPos.x,
-              y: spawnPos.y,
-              z: spawnPos.z,
-            }, 0.5);
-          } else {
-            newRb.createBox(
-              5,
-              { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
-              { x: 0, y: 0, z: 0, w: 1 },
-              { x: 1, y: 1, z: 1 },
-            );
-          }
-          newRb.setFriction(0.5);
-          newRb.setRestitution(0.6);
-          physicsWorld.addRigidBody(newRb.body_);
-
-          const idx = rigidBodies.findIndex((rb) =>
-            rb.mesh === itemToThrow.mesh
-          );
-          if (idx !== -1) {
-            rigidBodies[idx].rigidBody = newRb;
-          }
-
-          const throwForce = direction.normalize().multiplyScalar(200);
-          const ammoForce = new Ammo.btVector3(
-            throwForce.x,
-            throwForce.y,
-            throwForce.z,
-          );
-          newRb.body_.applyCentralImpulse(ammoForce);
-          Ammo.destroy(ammoForce);
-
-          console.log(
-            `Threw item! ${inventory.heldItems.length} items remaining.`,
-          );
+      // Throw button uses the same handler as spacebar
+      if (inputManager.wasMobileButtonPressed("throw")) {
+        if (inputManager.onThrowItem) {
+          inputManager.onThrowItem();
         }
       }
 
-      // Switch button - cycle through inventory items (same as mouse wheel scroll)
-      if (mobileControls && mobileControls.wasButtonPressed("switch")) {
-        if (inventory.heldItems.length > 1) {
-          inventory.currentItemIndex = (inventory.currentItemIndex + 1) %
-            inventory.heldItems.length;
-          console.log(
-            `Switched to item ${
-              inventory.currentItemIndex + 1
-            }/${inventory.heldItems.length}`,
-          );
+      // Switch button uses the same handler as mouse wheel
+      if (inputManager.wasMobileButtonPressed("switch")) {
+        if (inputManager.onScrollInventory) {
+          inputManager.onScrollInventory(1); // Positive delta = next item
         }
       }
 
@@ -1135,10 +951,12 @@ export default function init() {
         right.crossVectors(forward, up).normalize();
         up.crossVectors(right, forward).normalize();
 
-        // Position in bottom right: forward 1.5 units, right 0.8 units, down 0.6 units
-        const offset = forward.clone().multiplyScalar(1.5)
-          .add(right.clone().multiplyScalar(0.8))
-          .add(up.clone().multiplyScalar(-0.6));
+        // Position in bottom right: forward, right, and down based on config
+        const offset = forward.clone().multiplyScalar(
+          InventoryDisplay.FORWARD_DISTANCE,
+        )
+          .add(right.clone().multiplyScalar(InventoryDisplay.RIGHT_OFFSET))
+          .add(up.clone().multiplyScalar(InventoryDisplay.DOWN_OFFSET));
 
         heldMesh.position.copy(camera.position).add(offset);
 
