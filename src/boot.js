@@ -2,11 +2,13 @@
 // Keeping the import here ensures the team uses a single global THREE instance.
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import init from "./main.js";
 
 // Expose the library globally so `src/main.js` (and other modules) can use it.
 globalThis.THREE = THREE;
 globalThis.PointerLockControls = PointerLockControls;
+globalThis.OBJLoader = OBJLoader;
 
 // Check if Ammo.js was initialized by index.html
 if (typeof globalThis.Ammo !== "undefined" && globalThis.Ammo !== null) {

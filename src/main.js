@@ -60,6 +60,47 @@ export default function init() {
       DOOR: "door", // Switches between rooms
     };
 
+    // =============== MESH/OBJ HELPER FUNCTIONS =============== //
+    // These helpers work with both regular Mesh objects and Group objects (OBJ models)
+    const MeshHelpers = {
+      // Get material color from mesh or first child mesh in group
+      getColor: (object) => {
+        if (object.material) return object.material.color;
+        let childColor = null;
+        object.traverse((child) => {
+          if (child.isMesh && child.material && !childColor) {
+            childColor = child.material.color;
+          }
+        });
+        return childColor;
+      },
+      
+      // Set color on mesh or all child meshes in group
+      setColor: (object, colorHex) => {
+        if (object.material) {
+          object.material.color.setHex(colorHex);
+        } else {
+          object.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.color.setHex(colorHex);
+            }
+          });
+        }
+      },
+      
+      // Get geometry type (for determining physics shape)
+      getGeometryType: (object) => {
+        if (object.geometry) return object.geometry.type;
+        let geometryType = null;
+        object.traverse((child) => {
+          if (child.isMesh && child.geometry && !geometryType) {
+            geometryType = child.geometry.type;
+          }
+        });
+        return geometryType;
+      },
+    };
+
     // Helper functions for object types
     const ObjectHelpers = {
       makePickable: (mesh) => {
@@ -283,35 +324,70 @@ export default function init() {
       console.log("Wall physics body: box at z=-10, size 20x20x1 (vertical)");
     }
     // Create some cube objects for the environment
-    const cubeGeometry = new BoxGeometry(1, 1, 1);
+    // Load custom OBJ model instead of basic box geometry
+    let redCube = null; // Declare in outer scope
+    const loader = new globalThis.OBJLoader();
+    
+    loader.load(
+      '/src/assets/spacecube.obj',
+      // Success callback - called when model loads
+      (object) => {
+        // The loaded OBJ becomes the redCube
+        redCube = object;
+        
+        // Scale up the model by 50%
+        redCube.scale.set(1.8, 1.8, 1.8);
+        
+        // Apply material to all meshes in the loaded object
+        redCube.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new MeshStandardMaterial({ color: Colors.RED });
+            child.castShadow = true;
+            // Set userData on each child mesh so raycasting can detect it
+            child.userData.objectType = ObjectType.PICKABLE;
+            // Store reference to parent so pickup system can find the rigidBody
+            child.userData.parentObject = redCube;
+          }
+        });
+        
+        redCube.position.set(-2, 5, 0);
+        ObjectHelpers.makePickable(redCube); // Also set on parent
+        scenes.room2.add(redCube);
 
-    // Red cube
-    const redCubeMaterial = new MeshStandardMaterial({ color: Colors.RED });
-    const redCube = new Mesh(cubeGeometry, redCubeMaterial);
-    redCube.position.set(-2, 5, 0); // Set initial position to match physics body
-    redCube.castShadow = true;
-    ObjectHelpers.makePickable(redCube);
-
-    scenes.room2.add(redCube);
-
-    if (physicsWorld) {
-      const rbredCube = new RigidBody();
-      rbredCube.createBox(10, { x: -2, y: 5, z: 0 }, {
-        x: 0,
-        y: 0,
-        z: 0,
-        w: 1,
-      }, {
-        x: 1,
-        y: 1,
-        z: 1,
-      });
-      rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
-      rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
-      physicsWorld.addRigidBody(rbredCube.body_);
-      rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
-      console.log("Cube physics body added at y=5, mass=10");
-    }
+        if (physicsWorld) {
+          const rbredCube = new RigidBody();
+          // Match physics box to scaled visual model (1.2x scale = 0.6 size)
+          rbredCube.createBox(10, { x: -2, y: 3, z: 0 }, {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 1,
+          }, {
+            x: 0.5,
+            y: 0.5,
+            z: 0.5,
+          });
+          rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
+          rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
+          physicsWorld.addRigidBody(rbredCube.body_);
+          
+          // Ensure the body is active and responds to gravity
+          rbredCube.body_.setActivationState(1); // ACTIVE_TAG
+          rbredCube.body_.activate(true);
+          
+          rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
+          console.log("Custom OBJ model loaded and physics body added at y=5, mass=10");
+        }
+      },
+      // Progress callback
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+      // Error callback
+      (error) => {
+        console.error('Error loading OBJ model:', error);
+      }
+    );
 
     // Create clickable sphere with physics
     const sphereGeometry = new SphereGeometry(0.5, 32, 32);
@@ -642,7 +718,7 @@ export default function init() {
       onColorButtonClick: (newColor) => {
         if (inventory.heldItems.length > 0) {
           const currentItem = inventory.heldItems[inventory.currentItemIndex];
-          currentItem.mesh.material.color.setHex(newColor);
+          MeshHelpers.setColor(currentItem.mesh, newColor);
           console.log(
             `Changed item ${inventory.currentItemIndex + 1} to color: #${
               newColor.toString(16).padStart(6, "0")
@@ -653,7 +729,9 @@ export default function init() {
         }
       },
       onPickableClick: (obj) => {
-        const itemData = rigidBodies.find((rb) => rb.mesh === obj);
+        // For OBJ models with child meshes, check for parent reference
+        const targetMesh = obj.userData.parentObject || obj;
+        const itemData = rigidBodies.find((rb) => rb.mesh === targetMesh);
         if (itemData && physicsWorld) {
           physicsWorld.removeRigidBody(itemData.rigidBody.body_);
           if (inventory.heldItems.length === 0) {
@@ -692,18 +770,22 @@ export default function init() {
         itemToThrow.mesh.position.copy(spawnPos);
 
         const newRb = new RigidBody();
-        if (itemToThrow.mesh.geometry.type === "SphereGeometry") {
+        // Check if it's a sphere by looking at geometry (handles both Mesh and Group/OBJ)
+        const isSphere = MeshHelpers.getGeometryType(itemToThrow.mesh) === "SphereGeometry";
+        
+        if (isSphere) {
           newRb.createSphere(
             5,
             { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
             0.5,
           );
         } else {
+          // For cubes and OBJ models, use box collider
           newRb.createBox(
             5,
             { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z },
             { x: 0, y: 0, z: 0, w: 1 },
-            { x: 1, y: 1, z: 1 },
+            { x: 0.5, y: 0.5, z: 0.5 }, // Match the physics size we used for the OBJ
           );
         }
         newRb.setFriction(PhysicsConfig.OBJECT_FRICTION);
@@ -842,29 +924,32 @@ export default function init() {
                     if (messageElement) {
                       messageElement.style.display = "block";
                       console.log("Congrats you hit the target!");
-                      console.log(obj0.mesh.material.color);
+                      console.log(MeshHelpers.getColor(obj0.mesh));
                     }
                   }
 
                   if (
                     ((obj0.mesh === redCube &&
                       obj1.mesh === targetWall) ||
-                      (obj1.mesh === redCube && obj0.mesh === targetWall)) &&
-                    (obj1.mesh.material.color.getHex() ==
-                      obj0.mesh.material.color.getHex())
+                      (obj1.mesh === redCube && obj0.mesh === targetWall))
                   ) {
-                    const messageElement = document.getElementById(
-                      "target-message",
-                    );
-                    if (messageElement) {
-                      messageElement.style.display = "block";
-                      console.log("MATCHING COLOR!");
+                    const color0 = MeshHelpers.getColor(obj0.mesh);
+                    const color1 = MeshHelpers.getColor(obj1.mesh);
+                    
+                    if (color0 && color1 && color0.getHex() === color1.getHex()) {
+                      const messageElement = document.getElementById(
+                        "target-message",
+                      );
+                      if (messageElement) {
+                        messageElement.style.display = "block";
+                        console.log("MATCHING COLOR!");
+                      }
+                      switchRoom("room3");
+                      groundMaterial.color.setHex(0x0000FF);
+                      wallMaterial.color.setHex(0x8F9779);
+                      console.log(color0);
+                      console.log(color1);
                     }
-                    switchRoom("room3");
-                    groundMaterial.color.setHex(0x0000FF);
-                    wallMaterial.color.setHex(0x8F9779);
-                    console.log(obj0.mesh.material.color);
-                    console.log(obj1.mesh.material.color);
                   }
 
                   // You can add custom collision responses here
