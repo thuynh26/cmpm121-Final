@@ -522,9 +522,14 @@ export default function init() {
     // =============== MOBILE CONTROLS INITIALIZATION =============== //
     // Initialize mobile controls (virtual joystick + action buttons)
     // Only create on touch-enabled mobile devices
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                           ('ontouchstart' in window) || 
-                           (navigator.maxTouchPoints > 0);
+    // Check for actual mobile devices, not just touch capability
+    // Windows laptops with touchscreens should use desktop controls
+    const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isWindows = /Windows/i.test(navigator.userAgent);
+    const isMac = /Macintosh/i.test(navigator.userAgent);
+    
+    // Only enable mobile controls on actual mobile devices, not Windows/Mac with touch
+    const isMobileDevice = isActualMobile && !isWindows && !isMac;
     
     let mobileControls = null;
     if (isMobileDevice) {
