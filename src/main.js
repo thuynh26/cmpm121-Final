@@ -524,13 +524,16 @@ export default function init() {
     // Only create on touch-enabled mobile devices
     // Check for actual mobile devices, not just touch capability
     // Windows laptops with touchscreens should use desktop controls
-    const isActualMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isActualMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
     const isWindows = /Windows/i.test(navigator.userAgent);
     const isMac = /Macintosh/i.test(navigator.userAgent);
-    
+
     // Only enable mobile controls on actual mobile devices, not Windows/Mac with touch
     const isMobileDevice = isActualMobile && !isWindows && !isMac;
-    
+
     let mobileControls = null;
     if (isMobileDevice) {
       mobileControls = new MobileControls();
@@ -947,7 +950,9 @@ export default function init() {
 
       // Get mobile joystick input (returns {x, y} normalized values from -1 to 1)
       // x = left/right strafe, y = forward/backward movement
-      const joystickMove = mobileControls ? mobileControls.getMovement() : { x: 0, y: 0 };
+      const joystickMove = mobileControls
+        ? mobileControls.getMovement()
+        : { x: 0, y: 0 };
 
       // Check if player is trying to move (either keyboard or joystick input)
       // Dead zone of 0.1 prevents drift from small touch movements
