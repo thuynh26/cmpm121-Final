@@ -83,59 +83,53 @@ export default function init() {
     // `index.html` should include `<div id="scene-container">` to show the renderer.
     const container = document.getElementById("scene-container");
 
-    // Create a scene in Three.jsand set a background color.
-    const scene = new Scene();
-
-    // const scene1 = new Scene();
-
-    scene.background = new Color(Colors.SKY_BLUE);
-
-    const sceneThree = new Scene();
-    sceneThree.background = new Color(Colors.GREEN);
-
-    // Add a simple grid so there's some visuals to see when loading the page.
-    // This should be removed after adding actual models to the scene.
-    const grid1 = new GridHelper(10, 10); // size 10, 10 divisions
-    grid1.position.y = 0; // place grid at world origin
-    scene.add(grid1);
-
-    // Add lighting to the scene
-    // Ambient light provides soft overall illumination
-    const ambientLight = new AmbientLight(
-      Colors.WHITE,
-      Lighting.AMBIENT_INTENSITY,
-    );
-    scene.add(ambientLight);
-
-    // Directional light simulates sunlight
-    const directionalLight = new DirectionalLight(
-      Colors.WHITE,
-      Lighting.DIRECTIONAL_INTENSITY,
-    );
-    directionalLight.position.set(
-      Lighting.DIRECTIONAL_POSITION.x,
-      Lighting.DIRECTIONAL_POSITION.y,
-      Lighting.DIRECTIONAL_POSITION.z,
-    );
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
-
     // =============== ROOMS SYSTEM =============== //
-    const rooms = {
-      room1: new lib.Group(), // the starting room
-      room2: new lib.Group(),
-      room3: new lib.Group(),
+    // Create separate scenes for each room
+    const scenes = {
+      room1: new Scene(),
+      room2: new Scene(),
+      room3: new Scene(),
     };
     let currentRoom = "room1";
+    let currentScene = scenes.room1;
 
-    scene.add(rooms.room1);
-    rooms.room1.visible = true;
+    // Set background colors for each scene
+    scenes.room1.background = new Color(Colors.SKY_BLUE);
+    scenes.room2.background = new Color(Colors.FOREST_GREEN);
+    scenes.room3.background = new Color(Colors.GRAY);
 
-    scene.add(rooms.room2);
-    rooms.room2.visible = false;
+    // Add lighting to each scene
+    function addLightingToScene(scene) {
+      // Ambient light provides soft overall illumination
+      const ambientLight = new AmbientLight(
+        Colors.WHITE,
+        Lighting.AMBIENT_INTENSITY,
+      );
+      scene.add(ambientLight);
 
-    scene.add(rooms.room3);
-    rooms.room3.visible = false;
+      // Directional light simulates sunlight
+      const directionalLight = new DirectionalLight(
+        Colors.WHITE,
+        Lighting.DIRECTIONAL_INTENSITY,
+      );
+      directionalLight.position.set(
+        Lighting.DIRECTIONAL_POSITION.x,
+        Lighting.DIRECTIONAL_POSITION.y,
+        Lighting.DIRECTIONAL_POSITION.z,
+      );
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+    }
+
+    // Add lighting to all scenes
+    addLightingToScene(scenes.room1);
+    addLightingToScene(scenes.room2);
+    addLightingToScene(scenes.room3);
+
+    // Add grid to room1 for visual reference
+    const grid1 = new GridHelper(10, 10);
+    grid1.position.y = 0;
+    scenes.room1.add(grid1);
 
     // =============== ROOM 1 =============== //
     const room1FloorGeo = new PlaneGeometry(10, 10);
@@ -148,7 +142,7 @@ export default function init() {
     room1Floor.rotation.x = -Math.PI / 2;
     room1Floor.position.set(0, 0, 0);
     room1Floor.receiveShadow = true;
-    rooms.room1.add(room1Floor);
+    scenes.room1.add(room1Floor);
 
     // Back wall
     const room1BackWallGeo = new PlaneGeometry(10, 5);
@@ -159,7 +153,7 @@ export default function init() {
     });
     const room1BackWall = new Mesh(room1BackWallGeo, room1BackWallMat);
     room1BackWall.position.set(0, 2.5, -5);
-    rooms.room1.add(room1BackWall);
+    scenes.room1.add(room1BackWall);
 
     // Door from Room 1 -> Room 2
     const doorGeo = new BoxGeometry(1.5, 3, 0.2);
@@ -172,14 +166,14 @@ export default function init() {
     const doorRoom1To2 = new Mesh(doorGeo, doorMat);
     doorRoom1To2.position.set(0, 1.5, -4.9);
     ObjectHelpers.makeDoor(doorRoom1To2, "room2");
-    rooms.room1.add(doorRoom1To2);
+    scenes.room1.add(doorRoom1To2);
 
     // =============== ROOM 2 =============== //
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
     const grid2 = new GridHelper(10, 10); // size 10, 10 divisions
     grid2.position.y = 0; // place grid at world origin
-    rooms.room2.add(grid2);
+    scenes.room2.add(grid2);
 
     // Create a ground plane
     const groundGeometry = new PlaneGeometry(20, 20);
@@ -192,8 +186,7 @@ export default function init() {
     ground.rotation.x = -Math.PI / 2; // Rotate to be horizontal
     ground.position.y = 0;
     ground.receiveShadow = true;
-    scene.add(ground);
-    rooms.room2.add(ground);
+    scenes.room2.add(ground);
 
     // Create physics body for the ground (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -220,7 +213,7 @@ export default function init() {
     const doorRoom2To1 = doorRoom1To2.clone();
     doorRoom2To1.position.set(0, 1.5, 9);
     ObjectHelpers.makeDoor(doorRoom2To1, "room1");
-    rooms.room2.add(doorRoom2To1);
+    scenes.room2.add(doorRoom2To1);
 
     // Create a wall plane
     const wallGeometry = new PlaneGeometry(20, 20);
@@ -232,7 +225,7 @@ export default function init() {
     const wall = new Mesh(wallGeometry, wallMaterial);
     wall.position.set(0, 0, -10); // Position wall at back, centered at ground
     wall.receiveShadow = true;
-    rooms.room2.add(wall);
+    scenes.room2.add(wall);
 
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -267,7 +260,7 @@ export default function init() {
     const targetWall = new Mesh(targetGeometry, targetMaterial);
     targetWall.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
     targetWall.receiveShadow = true;
-    rooms.room2.add(targetWall);
+    scenes.room2.add(targetWall);
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
       const rbtargetWall = new RigidBody();
@@ -299,8 +292,7 @@ export default function init() {
     redCube.castShadow = true;
     ObjectHelpers.makePickable(redCube);
 
-    scene.add(redCube);
-    //rooms.add(redCube);
+    scenes.room2.add(redCube);
 
     if (physicsWorld) {
       const rbredCube = new RigidBody();
@@ -335,7 +327,7 @@ export default function init() {
     clickableSphere.position.set(0, 2, 0); // Start above ground
     clickableSphere.castShadow = true;
     ObjectHelpers.makePickable(clickableSphere);
-    scene.add(clickableSphere);
+    scenes.room2.add(clickableSphere);
 
     // Add physics body for sphere
     let sphereRigidBody = null;
@@ -353,15 +345,15 @@ export default function init() {
     // Add a simple grid so there's some visuals to see when loading the page.
     // This should be removed after adding actual models to the scene.
     const grid3 = new GridHelper(10, 10); // size 10, 10 divisions
-    grid2.position.y = 0; // place grid at world origin
-    rooms.room3.add(grid3);
+    grid3.position.y = 0; // place grid at world origin
+    scenes.room3.add(grid3);
 
     // Create a ground plane
     const ground2 = new Mesh(groundGeometry, groundMaterial);
     ground2.rotation.x = -Math.PI / 2; // Rotate to be horizontal
     ground2.position.y = 0;
     ground2.receiveShadow = true;
-    rooms.room3.add(ground2);
+    scenes.room3.add(ground2);
 
     // Create physics body for the ground (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -384,17 +376,17 @@ export default function init() {
       console.log("Ground physics body: box at y=0, size 20x1x20 (unrotated)");
     }
 
-    // Door to go from Room 2 -> Room 1 (behind the player)
+    // Door to go from Room 3 -> Room 2 (behind the player)
     const doorRoom3To2 = doorRoom1To2.clone();
     doorRoom3To2.position.set(0, 1.5, 20);
     ObjectHelpers.makeDoor(doorRoom3To2, "room2");
-    rooms.room3.add(doorRoom3To2);
+    scenes.room3.add(doorRoom3To2);
 
     // Create a wall plane
     const wall2 = new Mesh(wallGeometry, wallMaterial);
     wall2.position.set(0, 0, -10); // Position wall at back, centered at ground
     wall2.receiveShadow = true;
-    rooms.room3.add(wall2);
+    scenes.room3.add(wall2);
 
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -456,7 +448,7 @@ export default function init() {
     const redButton = new Mesh(buttonGeometry, redButtonMaterial);
     redButton.position.set(-3, 1, -2);
     ObjectHelpers.makeColorButton(redButton, Colors.RED);
-    rooms.room1.add(redButton);
+    scenes.room1.add(redButton);
 
     // Green color button
     const greenButtonMaterial = new MeshStandardMaterial({
@@ -466,7 +458,7 @@ export default function init() {
     const greenButton = new Mesh(buttonGeometry, greenButtonMaterial);
     greenButton.position.set(-2, 1, -2);
     ObjectHelpers.makeColorButton(greenButton, Colors.GREEN);
-    rooms.room1.add(greenButton);
+    scenes.room1.add(greenButton);
 
     // Blue color button
     const blueButtonMaterial = new MeshStandardMaterial({
@@ -476,7 +468,7 @@ export default function init() {
     const blueButton = new Mesh(buttonGeometry, blueButtonMaterial);
     blueButton.position.set(-1, 1, -2);
     ObjectHelpers.makeColorButton(blueButton, Colors.BLUE);
-    rooms.room1.add(blueButton);
+    scenes.room1.add(blueButton);
 
     // Yellow color button
     const yellowButtonMaterial = new MeshStandardMaterial({
@@ -486,7 +478,7 @@ export default function init() {
     const yellowButton = new Mesh(buttonGeometry, yellowButtonMaterial);
     yellowButton.position.set(0, 1, -2);
     ObjectHelpers.makeColorButton(yellowButton, Colors.YELLOW);
-    rooms.room1.add(yellowButton);
+    scenes.room1.add(yellowButton);
 
     // =============== Inventory and movement system =============== //
     const inventory = {
@@ -507,12 +499,11 @@ export default function init() {
 
     // ============== ROOM SWITCHING HELPER ==============
     function switchRoom(nextRoom) {
-      console.log("tried siwtching rooms");
-      if (!rooms[nextRoom]) return;
+      console.log("Switching to room:", nextRoom);
+      if (!scenes[nextRoom]) return;
 
-      rooms[currentRoom].visible = false;
       currentRoom = nextRoom;
-      rooms[currentRoom].visible = true;
+      currentScene = scenes[nextRoom];
 
       if (currentRoom === "room1") {
         camera.position.set(
@@ -531,7 +522,7 @@ export default function init() {
       }
     }
 
-    // Game starts in in room1
+    // Game starts in room1
     switchRoom("room1");
 
     // Create the WebGL renderer with safe defaults and fallback to WebGL1.
@@ -635,10 +626,17 @@ export default function init() {
     // Set up click handlers for InputManager
     const _clickHandlers = {
       onDoorClick: (targetRoom) => {
+        // Before switching, remove held items from current scene
+        inventory.heldItems.forEach((item) => {
+          currentScene.remove(item.mesh);
+        });
+
         switchRoom(targetRoom);
-        if (inventory.heldItems) {
-          inventory.heldItems.visible = true;
-        }
+
+        // After switching, add held items to new scene
+        inventory.heldItems.forEach((item) => {
+          currentScene.add(item.mesh);
+        });
         console.log(inventory.heldItems.length);
       },
       onColorButtonClick: (newColor) => {
@@ -896,9 +894,9 @@ export default function init() {
       }
 
       // =============== INPUT PROCESSING =============== //
-      // Process click interactions
+      // Process click interactions (only for current scene)
       inputManager.processClickInteractions(
-        scene,
+        currentScene,
         ObjectHelpers,
         _clickHandlers,
       );
@@ -945,7 +943,10 @@ export default function init() {
         // Simulate center screen click for mobile interact
         const centerRaycast = new globalThis.THREE.Raycaster();
         centerRaycast.setFromCamera(new Vector3(0, 0), camera);
-        const intersects = centerRaycast.intersectObjects(scene.children, true);
+        const intersects = centerRaycast.intersectObjects(
+          currentScene.children,
+          true,
+        );
 
         for (const intersect of intersects) {
           const obj = intersect.object;
@@ -1012,7 +1013,7 @@ export default function init() {
         heldMesh.rotation.copy(camera.rotation);
       }
 
-      renderer.render(scene, camera);
+      renderer.render(currentScene, camera);
       requestAnimationFrame(animate);
     }
 
@@ -1021,7 +1022,8 @@ export default function init() {
 
     // Return the core objects so callers can add models, lights, controls, etc.
     return {
-      scene,
+      scenes,
+      currentScene,
       camera,
       renderer,
       container,

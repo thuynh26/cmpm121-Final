@@ -176,3 +176,10 @@ As we implemented the F2 requirements, we've been able to clarify our scope and 
 ### mobile device controls
 
 - Now the game will check what kind of device is being used (touch screen / desktop) and will change the control scheme to match. The desktop controls are unchanged, but mobile users can now move with a joystick and change their view by sliding their finger on the screen. They also may interact with, switch, and throw held items using three buttons.
+
+### Refactored Scene creation and interaction
+
+- **Separate Scenes Per Room**: Each room now has its own independent `Scene` object instead of using visibility toggles on groups within a single scene. This ensures complete isolation between rooms.
+- **Scene-Based Raycasting**: Click interactions and object detection now only check the current active scene, preventing players from interacting with objects in rooms they cannot see.
+- **Inventory Transfer System**: When switching rooms, held items are properly removed from the old scene and added to the new scene, ensuring they remain visible and functional across room transitions.
+- **Input Management Fix**: Added mouse leave/blur detection to prevent infinite action loops when the cursor exits the window during mouse interactions.
