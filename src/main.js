@@ -85,6 +85,9 @@ export default function init() {
 
     // Create a scene in Three.jsand set a background color.
     const scene = new Scene();
+
+    // const scene1 = new Scene();
+
     scene.background = new Color(Colors.SKY_BLUE);
 
     const sceneThree = new Scene();
@@ -531,9 +534,54 @@ export default function init() {
     // Game starts in in room1
     switchRoom("room1");
 
-    // Create the WebGL renderer, set its size and pixel ratio, then attach
-    // the renderer's canvas to the container element in index.html.
-    const renderer = new WebGLRenderer({ antialias: true });
+    // Create the WebGL renderer with safe defaults and fallback to WebGL1.
+    // Some macOS environments (or sandboxed browsers) fail to get a WebGL2 context.
+    // Proactively test WebGL context availability before constructing Three's renderer
+    const testCanvas = document.createElement("canvas");
+    const canWebGL2 = !!testCanvas.getContext("webgl2");
+    const canWebGL1 = !!testCanvas.getContext("webgl");
+
+    let renderer;
+    if (canWebGL2 || canWebGL1) {
+      try {
+        renderer = new WebGLRenderer({
+          antialias: false,
+          alpha: false,
+          powerPreference: "high-performance",
+          preserveDrawingBuffer: false,
+          stencil: false,
+          depth: true,
+        });
+      } catch (err) {
+        console.error("WebGLRenderer creation failed.", err);
+        // Try WebGL1Renderer only if available in current THREE build
+        if (globalThree && globalThree.WebGL1Renderer) {
+          try {
+            renderer = new globalThree.WebGL1Renderer({
+              antialias: false,
+              alpha: false,
+              powerPreference: "high-performance",
+              preserveDrawingBuffer: false,
+              stencil: false,
+              depth: true,
+            });
+          } catch (err1) {
+            console.error("WebGL1Renderer creation failed.", err1);
+          }
+        }
+      }
+    }
+
+    if (!renderer) {
+      const msg =
+        "WebGL context could not be created. On macOS, ensure Hardware Acceleration is enabled in your browser and try a Chromium-based browser. If running in a sandboxed environment, open the page directly outside the sandbox.";
+      console.error(msg);
+      const fallback = document.getElementById("webgl-error");
+      if (fallback) fallback.textContent = msg;
+      throw new Error(msg);
+    }
+
+    // Configure renderer and attach canvas
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(
       Math.min(
