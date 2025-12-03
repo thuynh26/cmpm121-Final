@@ -199,7 +199,7 @@ export class InputManager {
 
   // Get camera look delta (combines mouse drag and mobile touch)
   getLookDelta(sensitivity, mobileSensitivity) {
-    let delta = { x: 0, y: 0 };
+    const delta = { x: 0, y: 0 };
 
     // Desktop mouse look
     if (this._pendingLookDelta) {
