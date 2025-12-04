@@ -74,7 +74,7 @@ export default function init() {
         });
         return childColor;
       },
-      
+
       // Set color on mesh or all child meshes in group
       setColor: (object, colorHex) => {
         if (object.material) {
@@ -87,7 +87,7 @@ export default function init() {
           });
         }
       },
-      
+
       // Get geometry type (for determining physics shape)
       getGeometryType: (object) => {
         if (object.geometry) return object.geometry.type;
@@ -327,17 +327,17 @@ export default function init() {
     // Load custom OBJ model instead of basic box geometry
     let redCube = null; // Declare in outer scope
     const loader = new globalThis.OBJLoader();
-    
+
     loader.load(
-      '/src/assets/spacecube.obj',
+      "/src/assets/spacecube.obj",
       // Success callback - called when model loads
       (object) => {
         // The loaded OBJ becomes the redCube
         redCube = object;
-        
+
         // Scale up the model by 50%
         redCube.scale.set(1.5, 1.5, 1.5);
-        
+
         // Apply material to all meshes in the loaded object
         redCube.traverse((child) => {
           if (child.isMesh) {
@@ -349,7 +349,7 @@ export default function init() {
             child.userData.parentObject = redCube;
           }
         });
-        
+
         // Set initial position
         redCube.position.set(-2, 5, 0);
         ObjectHelpers.makePickable(redCube); // Also set on parent
@@ -360,30 +360,30 @@ export default function init() {
           const bbox = new lib.Box3().setFromObject(redCube);
           const size = new Vector3();
           bbox.getSize(size);
-          
+
           // Get center of the bounding box (this is where physics box should be)
           const center = new Vector3();
           bbox.getCenter(center);
-          
+
           // Calculate offset between object position and geometry center
           const offset = new Vector3().subVectors(center, redCube.position);
-          
+
           // Adjust visual position so geometry center aligns with physics center
           redCube.position.sub(offset);
-          
+
           const rbredCube = new RigidBody();
           // Physics box at desired spawn position
-          rbredCube.createBox(10, { 
-            x: -2, 
-            y: 5, 
-            z: 0 
+          rbredCube.createBox(10, {
+            x: -2,
+            y: 5,
+            z: 0,
           }, {
             x: 0,
             y: 0,
             z: 0,
             w: 1,
           }, {
-            x: size.x / 2,  // Half-extents from actual model
+            x: size.x / 2, // Half-extents from actual model
             y: size.y / 2,
             z: size.z / 2,
           });
@@ -393,23 +393,25 @@ export default function init() {
           rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
           rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
           physicsWorld.addRigidBody(rbredCube.body_);
-          
+
           // Ensure the body is active and responds to gravity
           rbredCube.body_.setActivationState(1); // ACTIVE_TAG
           rbredCube.body_.activate(true);
-          
+
           rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
-          console.log("Custom OBJ model loaded and physics body added at y=5, mass=10");
+          console.log(
+            "Custom OBJ model loaded and physics body added at y=5, mass=10",
+          );
         }
       },
       // Progress callback
       (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        console.log((xhr.loaded / xhr.total * 100) + "% loaded");
       },
       // Error callback
       (error) => {
-        console.error('Error loading OBJ model:', error);
-      }
+        console.error("Error loading OBJ model:", error);
+      },
     );
 
     // Create clickable sphere with physics
@@ -807,8 +809,9 @@ export default function init() {
 
         const newRb = new RigidBody();
         // Check if it's a sphere by looking at geometry (handles both Mesh and Group/OBJ)
-        const isSphere = MeshHelpers.getGeometryType(itemToThrow.mesh) === "SphereGeometry";
-        
+        const isSphere =
+          MeshHelpers.getGeometryType(itemToThrow.mesh) === "SphereGeometry";
+
         if (isSphere) {
           newRb.createSphere(
             5,
@@ -971,8 +974,10 @@ export default function init() {
                   ) {
                     const color0 = MeshHelpers.getColor(obj0.mesh);
                     const color1 = MeshHelpers.getColor(obj1.mesh);
-                    
-                    if (color0 && color1 && color0.getHex() === color1.getHex()) {
+
+                    if (
+                      color0 && color1 && color0.getHex() === color1.getHex()
+                    ) {
                       const messageElement = document.getElementById(
                         "target-message",
                       );
