@@ -725,6 +725,9 @@ export default function init() {
     const inputManager = new InputManager(renderer, camera, mobileControls);
 
     // Camera look sensitivity (stored for use in animate loop)
+    const euler = new lib.Euler(0, 0, 0, "YXZ");
+    const mobileSensitivity = 0.002;
+    const PI_2 = Math.PI / 2;
 
     // `onResize` keeps the camera projection and renderer size in sync with the container when the window is resized.
     function onResize() {
