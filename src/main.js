@@ -12,6 +12,9 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+}
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
   // This avoids re-downloading the library in browser environments.
