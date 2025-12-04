@@ -291,6 +291,16 @@ export class InputManager {
         this._pendingClick = null;
         return;
       }
+
+      // Handle victory button clicks
+      if (obj.userData.isVictoryButton) {
+        const overlay = document.getElementById("victory-overlay");
+        if (overlay) {
+          overlay.style.display = "flex";
+        }
+        this._pendingClick = null;
+        return;
+      }
     }
 
     this._pendingClick = null;

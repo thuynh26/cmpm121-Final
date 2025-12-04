@@ -307,7 +307,7 @@ export default function init() {
       const rbtargetWall = new RigidBody();
       // Create vertical target: 5x5 plane, positioned so bottom edge is at ground (y=0)
       // Center at y=2.5 so it spans from y=0 to y=5
-      rbtargetWall.createBox(10, { x: 0, y: 2.5, z: -9.9 }, {
+      rbtargetWall.createBox(10000, { x: 0, y: 2.5, z: -9.9 }, {
         x: 0,
         y: 0,
         z: 0,
@@ -336,7 +336,7 @@ export default function init() {
         redCube = object;
         
         // Scale up the model by 50%
-        redCube.scale.set(1.8, 1.8, 1.8);
+        redCube.scale.set(1.5, 1.5, 1.5);
         
         // Apply material to all meshes in the loaded object
         redCube.traverse((child) => {
@@ -350,23 +350,46 @@ export default function init() {
           }
         });
         
+        // Set initial position
         redCube.position.set(-2, 5, 0);
         ObjectHelpers.makePickable(redCube); // Also set on parent
         scenes.room2.add(redCube);
 
         if (physicsWorld) {
+          // Calculate bounding box from the actual model to get exact dimensions
+          const bbox = new lib.Box3().setFromObject(redCube);
+          const size = new Vector3();
+          bbox.getSize(size);
+          
+          // Get center of the bounding box (this is where physics box should be)
+          const center = new Vector3();
+          bbox.getCenter(center);
+          
+          // Calculate offset between object position and geometry center
+          const offset = new Vector3().subVectors(center, redCube.position);
+          
+          // Adjust visual position so geometry center aligns with physics center
+          redCube.position.sub(offset);
+          
           const rbredCube = new RigidBody();
-          // Match physics box to scaled visual model (1.2x scale = 0.6 size)
-          rbredCube.createBox(10, { x: -2, y: 3, z: 0 }, {
+          // Physics box at desired spawn position
+          rbredCube.createBox(10, { 
+            x: -2, 
+            y: 5, 
+            z: 0 
+          }, {
             x: 0,
             y: 0,
             z: 0,
             w: 1,
           }, {
-            x: 0.5,
-            y: 0.5,
-            z: 0.5,
+            x: size.x / 2,  // Half-extents from actual model
+            y: size.y / 2,
+            z: size.z / 2,
           });
+          console.log("Physics box size:", size.x, size.y, size.z);
+          console.log("Visual position:", redCube.position);
+          console.log("Physics center:", center);
           rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
           rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
           physicsWorld.addRigidBody(rbredCube.body_);
@@ -457,6 +480,19 @@ export default function init() {
     doorRoom3To2.position.set(0, 1.5, 20);
     ObjectHelpers.makeDoor(doorRoom3To2, "room2");
     scenes.room3.add(doorRoom3To2);
+
+    // Create victory button in room 3
+    const victoryButtonGeo = new BoxGeometry(2, 2, 0.3);
+    const victoryButtonMat = new MeshStandardMaterial({
+      color: 0xFFD700, // Gold
+      emissive: 0x886600,
+      roughness: 0.4,
+      metalness: 0.8,
+    });
+    const victoryButton = new Mesh(victoryButtonGeo, victoryButtonMat);
+    victoryButton.position.set(0, 1, -9.5);
+    victoryButton.userData.isVictoryButton = true;
+    scenes.room3.add(victoryButton);
 
     // Create a wall plane
     const wall2 = new Mesh(wallGeometry, wallMaterial);
@@ -1045,6 +1081,13 @@ export default function init() {
           }
           if (ObjectHelpers.isPickable(obj)) {
             _clickHandlers.onPickableClick(obj);
+            break;
+          }
+          if (obj.userData.isVictoryButton) {
+            const overlay = document.getElementById("victory-overlay");
+            if (overlay) {
+              overlay.style.display = "flex";
+            }
             break;
           }
         }
