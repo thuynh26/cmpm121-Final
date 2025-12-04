@@ -74,7 +74,7 @@ export default function init() {
         });
         return childColor;
       },
-      
+
       // Set color on mesh or all child meshes in group
       setColor: (object, colorHex) => {
         if (object.material) {
@@ -87,7 +87,7 @@ export default function init() {
           });
         }
       },
-      
+
       // Get geometry type (for determining physics shape)
       getGeometryType: (object) => {
         if (object.geometry) return object.geometry.type;
@@ -327,17 +327,17 @@ export default function init() {
     // Load custom OBJ model instead of basic box geometry
     let redCube = null; // Declare in outer scope
     const loader = new globalThis.OBJLoader();
-    
+
     loader.load(
-      '/src/assets/spacecube.obj',
+      "/src/assets/spacecube.obj",
       // Success callback - called when model loads
       (object) => {
         // The loaded OBJ becomes the redCube
         redCube = object;
-        
+
         // Scale up the model by 50%
         redCube.scale.set(1.8, 1.8, 1.8);
-        
+
         // Apply material to all meshes in the loaded object
         redCube.traverse((child) => {
           if (child.isMesh) {
@@ -349,7 +349,7 @@ export default function init() {
             child.userData.parentObject = redCube;
           }
         });
-        
+
         redCube.position.set(-2, 5, 0);
         ObjectHelpers.makePickable(redCube); // Also set on parent
         scenes.room2.add(redCube);
@@ -370,23 +370,25 @@ export default function init() {
           rbredCube.setFriction(PhysicsConfig.OBJECT_FRICTION);
           rbredCube.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
           physicsWorld.addRigidBody(rbredCube.body_);
-          
+
           // Ensure the body is active and responds to gravity
           rbredCube.body_.setActivationState(1); // ACTIVE_TAG
           rbredCube.body_.activate(true);
-          
+
           rigidBodies.push({ mesh: redCube, rigidBody: rbredCube });
-          console.log("Custom OBJ model loaded and physics body added at y=5, mass=10");
+          console.log(
+            "Custom OBJ model loaded and physics body added at y=5, mass=10",
+          );
         }
       },
       // Progress callback
       (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        console.log((xhr.loaded / xhr.total * 100) + "% loaded");
       },
       // Error callback
       (error) => {
-        console.error('Error loading OBJ model:', error);
-      }
+        console.error("Error loading OBJ model:", error);
+      },
     );
 
     // Create clickable sphere with physics
@@ -771,8 +773,9 @@ export default function init() {
 
         const newRb = new RigidBody();
         // Check if it's a sphere by looking at geometry (handles both Mesh and Group/OBJ)
-        const isSphere = MeshHelpers.getGeometryType(itemToThrow.mesh) === "SphereGeometry";
-        
+        const isSphere =
+          MeshHelpers.getGeometryType(itemToThrow.mesh) === "SphereGeometry";
+
         if (isSphere) {
           newRb.createSphere(
             5,
@@ -935,8 +938,10 @@ export default function init() {
                   ) {
                     const color0 = MeshHelpers.getColor(obj0.mesh);
                     const color1 = MeshHelpers.getColor(obj1.mesh);
-                    
-                    if (color0 && color1 && color0.getHex() === color1.getHex()) {
+
+                    if (
+                      color0 && color1 && color0.getHex() === color1.getHex()
+                    ) {
                       const messageElement = document.getElementById(
                         "target-message",
                       );
