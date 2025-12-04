@@ -1,4 +1,4 @@
-const CACHE_NAME = `game-v1`;
+/*const CACHE_NAME = `game-v1`;
 
 const ASSETS = [
   '/',
@@ -43,3 +43,5 @@ self.addEventListener('activate', (event) => {
   // Take control of open tabs immediately
   return self.clients.claim();
 });
+
+*/

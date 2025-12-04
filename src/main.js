@@ -12,9 +12,16 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
+/*service Worker not registering
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
+  globalThis.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered, scope:', reg.scope))
+      .catch(err => console.warn('SW register failed:', err));
+  });
 }
+*/
+
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
   // This avoids re-downloading the library in browser environments.
