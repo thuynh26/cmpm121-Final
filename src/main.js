@@ -12,6 +12,7 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
+//============== START SCREEN & HUD ================//
 const startOverlay = document.createElement("div");
 startOverlay.id = "startOverlay";
 startOverlay.innerHTML =
@@ -22,7 +23,7 @@ const startButton = document.createElement("button");
 startButton.id = "myButton";
 startButton.innerHTML = "START GAME";
 startOverlay.appendChild(startButton);
-//document.body.removeChild(startOverlay);
+document.body.removeChild(startOverlay);
 
 const playerHUD = document.createElement("div");
 playerHUD.id = "playerHUD";
@@ -246,9 +247,59 @@ export default function init() {
       roughness: 0.8,
       metalness: 0.1,
     });
+
+    //canvas and context for wall text
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#58586eff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 30px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("FUEL TYPE", canvas.width / 2, canvas.height / 2);
+
+    // Create texture from canvas
+    const texture = new lib.CanvasTexture(canvas);
+    const wallWithTextMat = new MeshStandardMaterial({
+      map: texture,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+
     const room1BackWall = new Mesh(room1BackWallGeo, room1BackWallMat);
     room1BackWall.position.set(0, 2.5, -5);
     scenes.room1.add(room1BackWall);
+
+    const room1LeftWall = new Mesh(room1BackWallGeo, wallWithTextMat);
+    room1LeftWall.position.set(-5, 2.5, 0);
+    room1LeftWall.rotation.y = Math.PI / 2;
+    scenes.room1.add(room1LeftWall);
+
+    // Right wall (mirror of left wall)
+    const room1RightWall = new Mesh(room1BackWallGeo, room1BackWallMat);
+    room1RightWall.position.set(5, 2.5, 0);
+    room1RightWall.rotation.y = Math.PI / -2;
+    scenes.room1.add(room1RightWall);
+
+    // Ceiling
+    const room1CeilingGeo = new PlaneGeometry(10, 10);
+    const room1CeilingMat = new MeshStandardMaterial({
+      color: Colors.WALL_PURPLE,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+
+    // Front wall (opposite of back wall)
+    const room1FrontWall = new Mesh(room1BackWallGeo, room1BackWallMat);
+    room1FrontWall.position.set(0, 2.5, 5);
+    room1FrontWall.rotation.y = Math.PI;
+    scenes.room1.add(room1FrontWall);
+
+    const room1Ceiling = new Mesh(room1CeilingGeo, room1CeilingMat);
+    room1Ceiling.position.set(0, 5, 0);
+    room1Ceiling.rotation.x = Math.PI / 2;
+    scenes.room1.add(room1Ceiling);
 
     // Door from Room 1 -> Room 2
     const doorGeo = new BoxGeometry(1.5, 3, 0.2);
@@ -701,7 +752,7 @@ export default function init() {
       emissive: Colors.EMISSIVE_RED,
     });
     const redButton = new Mesh(buttonGeometry, redButtonMaterial);
-    redButton.position.set(-3, 1, -2);
+    redButton.position.set(-5, 1, -3);
     ObjectHelpers.makeColorButton(redButton, Colors.RED);
     scenes.room1.add(redButton);
 
@@ -711,7 +762,7 @@ export default function init() {
       emissive: Colors.EMISSIVE_GREEN,
     });
     const greenButton = new Mesh(buttonGeometry, greenButtonMaterial);
-    greenButton.position.set(-2, 1, -2);
+    greenButton.position.set(-5, 1, -1);
     ObjectHelpers.makeColorButton(greenButton, Colors.GREEN);
     scenes.room1.add(greenButton);
 
@@ -721,7 +772,7 @@ export default function init() {
       emissive: Colors.EMISSIVE_BLUE,
     });
     const blueButton = new Mesh(buttonGeometry, blueButtonMaterial);
-    blueButton.position.set(-1, 1, -2);
+    blueButton.position.set(-5, 1, 1);
     ObjectHelpers.makeColorButton(blueButton, Colors.BLUE);
     scenes.room1.add(blueButton);
 
@@ -731,7 +782,7 @@ export default function init() {
       emissive: Colors.EMISSIVE_YELLOW,
     });
     const yellowButton = new Mesh(buttonGeometry, yellowButtonMaterial);
-    yellowButton.position.set(0, 1, -2);
+    yellowButton.position.set(-5, 1, 3);
     ObjectHelpers.makeColorButton(yellowButton, Colors.YELLOW);
     scenes.room1.add(yellowButton);
 
@@ -1027,17 +1078,17 @@ export default function init() {
     const clock = new lib.Clock();
     function animate() {
       const deltaTime = clock.getDelta();
-
+      //============== OXYGEN SYSTEM =============== //
       if (playerOxygen.canBreathe === false) {
         playerOxygen.consumeOxygen(0.30);
       }
       if (playerOxygen.getOxygenLevel() <= 0) {
         const overlay = document.getElementById("loss-overlay");
-        if (overlay) {
+        /*if (overlay) {
           overlay.style.display = "flex";
-        }
+        }*/
       }
-
+      //checks if holding canister then replenishes oxygen
       if (
         (inventory.heldItems[inventory.currentItemIndex]) &&
         inventory.heldItems[inventory.currentItemIndex].mesh == oxCanister
