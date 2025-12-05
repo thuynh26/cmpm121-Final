@@ -954,12 +954,17 @@ export default function init() {
       onColorButtonClick: (newColor) => {
         if (inventory.heldItems.length > 0) {
           const currentItem = inventory.heldItems[inventory.currentItemIndex];
-          MeshHelpers.setColor(currentItem.mesh, newColor);
-          console.log(
-            `Changed item ${inventory.currentItemIndex + 1} to color: #${
-              newColor.toString(16).padStart(6, "0")
-            }`,
-          );
+          if (
+            (currentItem.mesh == redCube) ||
+            (currentItem.mesh == sphereMaterial)
+          ) {
+            MeshHelpers.setColor(currentItem.mesh, newColor);
+            console.log(
+              `Changed item ${inventory.currentItemIndex + 1} to color: #${
+                newColor.toString(16).padStart(6, "0")
+              }`,
+            );
+          }
         } else {
           console.log("No items in inventory to change color");
         }
@@ -1083,8 +1088,8 @@ export default function init() {
         playerOxygen.consumeOxygen(0.30);
       }
       if (playerOxygen.getOxygenLevel() <= 0) {
-        const overlay = document.getElementById("loss-overlay");
-        /*if (overlay) {
+        /*const overlay = document.getElementById("loss-overlay");
+        if (overlay) {
           overlay.style.display = "flex";
         }*/
       }
