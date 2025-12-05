@@ -38,19 +38,11 @@ jobs:
         env:
           REPO_NAME: /${{ github.event.repository.name }}
 
-      - name: Debug - List dist contents
+      - name: Verify build output
         run: |
-          echo "=== Contents of dist ==="
-          ls -laR dist/
-          echo ""
-          echo "=== Looking for .obj files ==="
-          find dist/ -name "*.obj" || echo "No .obj files found"
-          echo ""
-          echo "=== File info for spacecube.obj ==="
-          file dist/assets/spacecube.obj || echo "File not found"
-          echo ""
-          echo "=== Size of spacecube.obj ==="
-          du -h dist/assets/spacecube.obj || echo "File not found"
+          echo "Checking for spacecube.obj..."
+          ls -lh dist/assets/spacecube.obj
+          find dist/ -name "*.obj"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -59,31 +51,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-
-      - name: Debug - Download and inspect uploaded artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: ./artifact-check
-
-      - name: Debug - Check artifact contents
-        run: |
-          echo "=== Artifact contents ==="
-          ls -laR ./artifact-check/
-          echo ""
-          echo "=== Extract and check tarball ==="
-          cd artifact-check
-          tar -tzf artifact.tar | grep -i "\.obj" || echo "No .obj files in tarball"
-          echo ""
-          echo "=== Extract tarball ==="
-          mkdir extracted
-          tar -xf artifact.tar -C extracted/
-          echo ""
-          echo "=== List extracted contents ==="
-          ls -laR extracted/
-          echo ""
-          echo "=== Look for .obj in extracted ==="
-          find extracted/ -name "*.obj" || echo "No .obj files found in extraction"
 
   # Deployment job
   deploy:

@@ -1,6 +1,6 @@
 // https://vitejs.dev/config/
 export default {
-  base: Deno.env.get("REPO_NAME") || "/",
+  base: (Deno.env.get("REPO_NAME") || "/").replace(/\/?$/, "/"),
   publicDir: "public",
   server: {
     port: 3000,
