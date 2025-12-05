@@ -373,7 +373,7 @@ export default function init() {
     const loader = new globalThis.OBJLoader();
 
     loader.load(
-      "/src/assets/spacecube.obj",
+      "/assets/spacecube.obj",
       // Success callback - called when model loads
       (object) => {
         // The loaded OBJ becomes the redCube
