@@ -12,6 +12,7 @@
       <h3 id="groupMembers">Brody, Elijah, Joshua, Tina</h3>
       <div id="scene-container" style="width: 100%; height: 600px"></div>
       <div
+        id="controls-text"
         style="text-align: center; margin-top: 10px; font-size: 16px; color: #555"
       >
         <strong>Controls:</strong> W/A/S/D to move | Right-click drag to look
@@ -28,10 +29,13 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; justify-content: center; align-items: center"
       >
         <div style="text-align: center; color: white">
-          <h1 style="font-size: 72px; margin: 0; text-shadow: 0 0 20px gold">
+          <h1
+            id="victory-title"
+            style="font-size: 72px; margin: 0; text-shadow: 0 0 20px gold"
+          >
             🎉 VICTORY! 🎉
           </h1>
-          <p style="font-size: 32px; margin-top: 20px">
+          <p id="victory-body" style="font-size: 32px; margin-top: 20px">
             You completed the game!
           </p>
           <button
@@ -50,10 +54,13 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; justify-content: center; align-items: center"
       >
         <div style="text-align: center; color: white">
-          <h1 style="font-size: 72px; margin: 0; text-shadow: 0 0 20px gold">
+          <h1
+            id="loss-title"
+            style="font-size: 72px; margin: 0; text-shadow: 0 0 20px gold"
+          >
             LOSE!
           </h1>
-          <p style="font-size: 32px; margin-top: 20px">
+          <p id="loss-body" style="font-size: 32px; margin-top: 20px">
             You ran out of oxygen!
           </p>
           <button
