@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CMPM121 - Web Game</title>
     
-    <script type="module" crossorigin src="/assets/index-3a1cd570.js"></script>
-    <link rel="stylesheet" href="/assets/index-6fd67505.css">
+    <script type="module" crossorigin src="/assets/index-676d910f.js"></script>
+    <link rel="stylesheet" href="/assets/index-6b179c6f.css">
   </head>
   <body>
     <main id="app">
@@ -16,14 +16,36 @@
       <div
         style="text-align: center; margin-top: 10px; font-size: 16px; color: #555"
       >
-        <strong>Controls:</strong> Right-click drag to look around | Left-click
-        to pick up sphere | SPACE to throw
+        <strong>Controls:</strong> W/A/S/D to move | Right-click drag to look
+        around | Left-click to iteract | SPACE to throw
       </div>
       <div
         id="target-message"
         style="display: none; text-align: center; font-size: 24px; color: #4caf50; font-weight: bold; margin-top: 20px"
       >
         Congrats you hit the target!
+      </div>
+      <div
+        id="victory-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; justify-content: center; align-items: center"
+      >
+        <div style="text-align: center; color: white">
+          <h1 style="font-size: 72px; margin: 0; text-shadow: 0 0 20px gold">
+            🎉 VICTORY! 🎉
+          </h1>
+          <p style="font-size: 32px; margin-top: 20px">
+            You completed the game!
+          </p>
+          <button
+            id="reset-button"
+            onclick="location.reload()"
+            style="margin-top: 40px; padding: 20px 40px; font-size: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: transform 0.2s"
+            onmouseover="this.style.transform='scale(1.1)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            Play Again
+          </button>
+        </div>
       </div>
     </main>
 
