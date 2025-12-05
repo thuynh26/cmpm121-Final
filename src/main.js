@@ -373,7 +373,7 @@ export default function init() {
     const loader = new globalThis.OBJLoader();
 
     loader.load(
-      "/assets/spacecube.obj",
+      `${import.meta.env.BASE_URL}assets/spacecube.obj`,
       // Success callback - called when model loads
       (object) => {
         // The loaded OBJ becomes the redCube
