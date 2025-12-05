@@ -38,6 +38,13 @@ jobs:
         env:
           REPO_NAME: /${{ github.event.repository.name }}
 
+      - name: Debug - List dist contents
+        run: |
+          echo "Contents of dist:"
+          ls -laR dist/
+          echo "Looking for .obj files:"
+          find dist/ -name "*.obj" || echo "No .obj files found"
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
