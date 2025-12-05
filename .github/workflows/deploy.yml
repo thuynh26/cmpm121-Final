@@ -96,3 +96,11 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Debug - Check deployed site
+        run: |
+          echo "Deployment URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "Waiting 10 seconds for deployment to propagate..."
+          sleep 10
+          echo "Checking if .obj file is accessible..."
+          curl -I "${{ steps.deployment.outputs.page_url }}assets/spacecube.obj" || echo "Failed to access .obj file"
