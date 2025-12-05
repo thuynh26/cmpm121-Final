@@ -12,25 +12,8 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
-/*service Worker not registering
-if ('serviceWorker' in navigator) {
-  globalThis.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered, scope:', reg.scope))
-      .catch(err => console.warn('SW register failed:', err));
-  });
-}
-*/
 const overlay = document.createElement("div");
 overlay.id = "overlay";
-/*overlay.style.position = 'fixed';
-overlay.style.display = 'flex';
-overlay.style.justifyContent = 'center';  // horizontal
-overlay.style.alignItems = 'center';      // vertical
-overlay.style.height = '100vh';           // full screen height
-overlay.style.top = '0';
-overlay.style.left = '0';
-overlay.style.zIndex = '9999';*/
 overlay.innerHTML =
   `HOW TO PLAY: <br> Use WASD to move <br> Left click: Interact with Objects <br> Right Click: Drag to Look <br> SPACE: Throw Item <br>`;
 document.body.appendChild(overlay);
@@ -41,10 +24,37 @@ startButton.innerHTML = "START GAME";
 overlay.appendChild(startButton);
 
 startButton.addEventListener("click", () => {
-  document.body.removeChild(overlay);
 });
+document.body.removeChild(overlay);
 
-//document.body.removeChild(overlay);
+const playerHUD = document.createElement("div");
+playerHUD.id = "playerHUD";
+playerHUD.style.position = "fixed";
+const oxygenText = document.createElement("div");
+oxygenText.id = "oxygenText";
+playerHUD.style.position = "absolute";
+playerHUD.style.top = "30%";
+playerHUD.style.left = "15%";
+oxygenText.innerHTML = `Oxygen Level: 100%`;
+document.body.appendChild(playerHUD);
+playerHUD.appendChild(oxygenText);
+
+class OxygenManager {
+  constructor() {
+    this.oxygenLevel = 100;
+    this.canBreathe = true;
+  }
+  oxygenLevel;
+  consumeOxygen(amount) {
+    this.oxygenLevel -= amount;
+    oxygenText.innerHTML = `Oxygen Level: ` + this.oxygenLevel.toFixed(2);
+    playerHUD.appendChild(oxygenText);
+  }
+  getOxygenLevel() {
+    return this.oxygenLevel;
+  }
+}
+const playerOxygen = new OxygenManager();
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -659,14 +669,17 @@ export default function init() {
           CameraConfig.INITIAL_HEIGHT,
           CameraConfig.INITIAL_DISTANCE,
         );
+        playerOxygen.canBreathe = false;
       } else if (currentRoom === "room2") {
         camera.position.set(
           0,
           CameraConfig.INITIAL_HEIGHT,
           CameraConfig.ROOM2_INITIAL_DISTANCE,
         );
+        playerOxygen.canBreathe = true;
       } else if (currentRoom === "room3") {
         camera.position.set(0, CameraConfig.INITIAL_HEIGHT, 11);
+        playerOxygen.canBreathe = true;
       }
     }
 
@@ -916,6 +929,9 @@ export default function init() {
     function animate() {
       const deltaTime = clock.getDelta();
 
+      if (playerOxygen.canBreathe === false) {
+        //playerOxygen.consumeOxygen(0.30);
+      }
       // Update physics world
       if (physicsWorld) {
         // Use fixed timestep for stable physics - cap deltaTime to prevent huge jumps
