@@ -362,16 +362,64 @@ export default function init() {
     scenes.room2.add(doorRoom2To1);
 
     // Create a wall plane
-    const wallGeometry = new PlaneGeometry(20, 20);
+    const wallGeometry = new PlaneGeometry(20, 10);
     const wallMaterial = new MeshStandardMaterial({
       color: Colors.WALL_GRAY,
       roughness: 0.8,
       metalness: 0.2,
     });
+
+    const canvas2 = document.createElement("canvas");
+    const ctx2 = canvas2.getContext("2d");
+    ctx2.fillStyle = "#58586eff";
+    ctx2.fillRect(0, 0, canvas.width, canvas.height);
+    ctx2.fillStyle = "#ffffff";
+    ctx2.font = "bold 20px Arial";
+    ctx2.textAlign = "center";
+    ctx2.fillText(`Throw Fuel Container at Depot`, canvas.width / 2, 50);
+
+    // Create texture from canvas
+    const texture2 = new lib.CanvasTexture(canvas2);
+    const wallWithTextMat2 = new MeshStandardMaterial({
+      map: texture2,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+
     const wall = new Mesh(wallGeometry, wallMaterial);
     wall.position.set(0, 0, -10); // Position wall at back, centered at ground
     wall.receiveShadow = true;
     scenes.room2.add(wall);
+
+    const room2LeftWall = new Mesh(wallGeometry, wallWithTextMat2);
+    room2LeftWall.position.set(-10, 0, 0);
+    room2LeftWall.rotation.y = Math.PI / 2;
+    scenes.room2.add(room2LeftWall);
+
+    // Right wall (mirror of left wall)
+    const room2RightWall = new Mesh(wallGeometry, room1BackWallMat);
+    room2RightWall.position.set(10, 0, 0);
+    room2RightWall.rotation.y = Math.PI / -2;
+    scenes.room2.add(room2RightWall);
+
+    // Ceiling
+    const room2CeilingGeo = new PlaneGeometry(20, 20);
+    const room2CeilingMat = new MeshStandardMaterial({
+      color: Colors.WALL_PURPLE,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+
+    // Front wall (opposite of back wall)
+    const room2FrontWall = new Mesh(wallGeometry, room1BackWallMat);
+    room2FrontWall.position.set(0, 0, 10);
+    room2FrontWall.rotation.y = Math.PI;
+    scenes.room2.add(room2FrontWall);
+
+    const room2Ceiling = new Mesh(room2CeilingGeo, room2CeilingMat);
+    room2Ceiling.position.set(0, 5, 0);
+    room2Ceiling.rotation.x = Math.PI / 2;
+    scenes.room2.add(room2Ceiling);
 
     // Create physics body for the wall (mass 0 = static/immovable object)
     if (physicsWorld) {
@@ -396,7 +444,7 @@ export default function init() {
     }
 
     // Create a wall plane
-    const targetGeometry = new PlaneGeometry(5, 5);
+    const targetGeometry = new PlaneGeometry(2, 2);
     const targetMaterial = new MeshStandardMaterial({
       color: 0xff0000, // red
       roughness: 0.8,
@@ -404,7 +452,7 @@ export default function init() {
     });
 
     const targetWall = new Mesh(targetGeometry, targetMaterial);
-    targetWall.position.set(0, 2.5, -9.9); // Position target lower (bottom at ground level)
+    targetWall.position.set(0, 2, -9.9); // Position target lower (bottom at ground level)
     targetWall.receiveShadow = true;
     scenes.room2.add(targetWall);
     // Create physics body for the wall (mass 0 = static/immovable object)
