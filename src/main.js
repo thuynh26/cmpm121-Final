@@ -23,7 +23,7 @@ const startButton = document.createElement("button");
 startButton.id = "myButton";
 startButton.innerHTML = "START GAME";
 startOverlay.appendChild(startButton);
-document.body.removeChild(startOverlay);
+//document.body.removeChild(startOverlay);
 
 const playerHUD = document.createElement("div");
 playerHUD.id = "playerHUD";
@@ -1136,10 +1136,10 @@ export default function init() {
         playerOxygen.consumeOxygen(0.30);
       }
       if (playerOxygen.getOxygenLevel() <= 0) {
-        /*const overlay = document.getElementById("loss-overlay");
+        const overlay = document.getElementById("loss-overlay");
         if (overlay) {
           overlay.style.display = "flex";
-        }*/
+        }
       }
       //checks if holding canister then replenishes oxygen
       if (
