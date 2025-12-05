@@ -12,20 +12,17 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
-const overlay = document.createElement("div");
-overlay.id = "overlay";
-overlay.innerHTML =
+const startOverlay = document.createElement("div");
+startOverlay.id = "startOverlay";
+startOverlay.innerHTML =
   `HOW TO PLAY: <br> Use WASD to move <br> Left click: Interact with Objects <br> Right Click: Drag to Look <br> SPACE: Throw Item <br>`;
-document.body.appendChild(overlay);
+document.body.appendChild(startOverlay);
 
 const startButton = document.createElement("button");
 startButton.id = "myButton";
 startButton.innerHTML = "START GAME";
-overlay.appendChild(startButton);
-
-startButton.addEventListener("click", () => {
-});
-document.body.removeChild(overlay);
+startOverlay.appendChild(startButton);
+//document.body.removeChild(startOverlay);
 
 const playerHUD = document.createElement("div");
 playerHUD.id = "playerHUD";
@@ -36,12 +33,11 @@ playerHUD.style.position = "absolute";
 playerHUD.style.top = "30%";
 playerHUD.style.left = "15%";
 oxygenText.innerHTML = `Oxygen Level: 100%`;
-document.body.appendChild(playerHUD);
-playerHUD.appendChild(oxygenText);
 
+//============OXYGEN MANAGER CLASS================//
 class OxygenManager {
   constructor() {
-    this.oxygenLevel = 100;
+    this.oxygenLevel = 100000;
     this.canBreathe = true;
   }
   oxygenLevel;
@@ -50,12 +46,26 @@ class OxygenManager {
     oxygenText.innerHTML = `Oxygen Level: ` + this.oxygenLevel.toFixed(2);
     playerHUD.appendChild(oxygenText);
   }
+
+  gainOxygen(amount) {
+    this.oxygenLevel += amount;
+  }
   getOxygenLevel() {
     return this.oxygenLevel;
+  }
+
+  setOxygenLevel(level) {
+    return this.oxygenLevel = level;
   }
 }
 const playerOxygen = new OxygenManager();
 
+startButton.addEventListener("click", () => {
+  document.body.removeChild(startOverlay);
+  document.body.appendChild(playerHUD);
+  playerOxygen.setOxygenLevel(100);
+  playerHUD.appendChild(oxygenText);
+});
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
   // This avoids re-downloading the library in browser environments.
@@ -458,6 +468,93 @@ export default function init() {
       },
     );
 
+    let oxCanister = null; // Declare in outer scope
+
+    loader.load(
+      `${import.meta.env.BASE_URL}assets/canister.obj`,
+      // Success callback - called when model loads
+      (object) => {
+        // The loaded OBJ becomes the redCube
+        oxCanister = object;
+
+        // Scale up the model by 50%
+        oxCanister.scale.set(2, 2, 2);
+
+        // Apply material to all meshes in the loaded object
+        oxCanister.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new MeshStandardMaterial({ color: Colors.WHITE });
+            child.castShadow = true;
+            // Set userData on each child mesh so raycasting can detect it
+            child.userData.objectType = ObjectType.PICKABLE;
+            // Store reference to parent so pickup system can find the rigidBody
+            child.userData.parentObject = oxCanister;
+          }
+        });
+
+        // Set initial position
+        oxCanister.position.set(-2, 5, 0);
+        ObjectHelpers.makePickable(oxCanister); // Also set on parent
+        scenes.room1.add(oxCanister);
+
+        if (physicsWorld) {
+          // Calculate bounding box from the actual model to get exact dimensions
+          const bbox = new lib.Box3().setFromObject(oxCanister);
+          const size = new Vector3();
+          bbox.getSize(size);
+
+          // Get center of the bounding box (this is where physics box should be)
+          const center = new Vector3();
+          bbox.getCenter(center);
+
+          // Calculate offset between object position and geometry center
+          const offset = new Vector3().subVectors(center, oxCanister.position);
+
+          // Adjust visual position so geometry center aligns with physics center
+          oxCanister.position.sub(offset);
+
+          const rboxCanister = new RigidBody();
+          // Physics box at desired spawn position
+          rboxCanister.createBox(10, {
+            x: -2,
+            y: 5,
+            z: 0,
+          }, {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 1,
+          }, {
+            x: size.x / 2, // Half-extents from actual model
+            y: size.y / 2,
+            z: size.z / 2,
+          });
+          console.log("Physics box size:", size.x, size.y, size.z);
+          console.log("Visual position:", oxCanister.position);
+          console.log("Physics center:", center);
+          rboxCanister.setFriction(PhysicsConfig.OBJECT_FRICTION);
+          rboxCanister.setRestitution(PhysicsConfig.CUBE_RESTITUTION);
+          physicsWorld.addRigidBody(rboxCanister.body_);
+
+          // Ensure the body is active and responds to gravity
+          rboxCanister.body_.setActivationState(1); // ACTIVE_TAG
+          rboxCanister.body_.activate(true);
+
+          rigidBodies.push({ mesh: oxCanister, rigidBody: rboxCanister });
+          console.log(
+            "Custom OBJ model loaded and physics body added at y=5, mass=10",
+          );
+        }
+      },
+      // Progress callback
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + "% loaded");
+      },
+      // Error callback
+      (error) => {
+        console.error("Error loading OBJ model:", error);
+      },
+    );
     // Create clickable sphere with physics
     const sphereGeometry = new SphereGeometry(0.5, 32, 32);
     const sphereMaterial = new MeshStandardMaterial({
@@ -921,6 +1018,8 @@ export default function init() {
             inventory.currentItemIndex + 1
           }/${inventory.heldItems.length}`,
         );
+        console.log("LOOKKOOKOKOK");
+        console.log(inventory.heldItems[inventory.currentItemIndex].rigidBody);
       }
     };
 
@@ -930,7 +1029,24 @@ export default function init() {
       const deltaTime = clock.getDelta();
 
       if (playerOxygen.canBreathe === false) {
-        //playerOxygen.consumeOxygen(0.30);
+        playerOxygen.consumeOxygen(0.30);
+      }
+      if (playerOxygen.getOxygenLevel() <= 0) {
+        const overlay = document.getElementById("loss-overlay");
+        if (overlay) {
+          overlay.style.display = "flex";
+        }
+      }
+
+      if (
+        (inventory.heldItems[inventory.currentItemIndex]) &&
+        inventory.heldItems[inventory.currentItemIndex].mesh == oxCanister
+      ) {
+        playerOxygen.gainOxygen(0.25);
+        if (playerOxygen.canBreathe === true) {
+          oxygenText.innerHTML = `Oxygen Level: ` +
+            playerOxygen.oxygenLevel.toFixed(2);
+        }
       }
       // Update physics world
       if (physicsWorld) {

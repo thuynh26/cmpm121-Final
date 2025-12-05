@@ -19,7 +19,7 @@ body {
   padding: 16px;
 }
 
-#overlay {
+#startOverlay {
   text-align: center;
   position: fixed;
   background-color: blue;
