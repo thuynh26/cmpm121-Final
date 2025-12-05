@@ -18,3 +18,17 @@ body {
   max-width: 1024px;
   padding: 16px;
 }
+
+#overlay {
+  text-align: center;
+  position: fixed;
+  background-color: blue;
+  width: 100%;
+  height: 100%;
+}
+
+#myButton {
+  position: relative; /* or absolute */
+  top: 55%;
+  left: -5%;
+}

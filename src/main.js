@@ -21,6 +21,30 @@ if ('serviceWorker' in navigator) {
   });
 }
 */
+const overlay = document.createElement("div");
+overlay.id = "overlay";
+/*overlay.style.position = 'fixed';
+overlay.style.display = 'flex';
+overlay.style.justifyContent = 'center';  // horizontal
+overlay.style.alignItems = 'center';      // vertical
+overlay.style.height = '100vh';           // full screen height
+overlay.style.top = '0';
+overlay.style.left = '0';
+overlay.style.zIndex = '9999';*/
+overlay.innerHTML =
+  `HOW TO PLAY: <br> Use WASD to move <br> Left click: Interact with Objects <br> Right Click: Drag to Look <br> SPACE: Throw Item <br>`;
+document.body.appendChild(overlay);
+
+const startButton = document.createElement("button");
+startButton.id = "myButton";
+startButton.innerHTML = "START GAME";
+overlay.appendChild(startButton);
+
+startButton.addEventListener("click", () => {
+  document.body.removeChild(overlay);
+});
+
+//document.body.removeChild(overlay);
 
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
