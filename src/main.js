@@ -12,18 +12,24 @@ import {
   Renderer as RendererConfig,
 } from "./config/gameConstants.js";
 
+// F3: langauge changing
+import { initI18n } from "./language.js";
+
 //============== START SCREEN & HUD ================//
+
 const startOverlay = document.createElement("div");
 startOverlay.id = "startOverlay";
-startOverlay.innerHTML =
-  `HOW TO PLAY: <br> Use WASD to move <br> Left click: Interact with Objects <br> Right Click: Drag to Look <br> SPACE: Throw Item <br>`;
+startOverlay.style.background = "rgba(0, 0, 0, 0.8)";
+startOverlay.style.color = "white";
+startOverlay.style.zIndex = "10000";
 document.body.appendChild(startOverlay);
 
 const startButton = document.createElement("button");
 startButton.id = "myButton";
-startButton.innerHTML = "START GAME";
 startOverlay.appendChild(startButton);
-//document.body.removeChild(startOverlay);
+
+// Initialize i18n
+initI18n({ startOverlay, startButton });
 
 const playerHUD = document.createElement("div");
 playerHUD.id = "playerHUD";
