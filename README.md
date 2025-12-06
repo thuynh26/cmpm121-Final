@@ -173,7 +173,7 @@ As we implemented the F2 requirements, we've been able to clarify our scope and 
 
 ## F3 Devlog Entry - 12/2/2025
 
-### mobile device controls
+### Mobile Device Controls
 
 - Now the game will check what kind of device is being used (touch screen / desktop) and will change the control scheme to match. The desktop controls are unchanged, but mobile users can now move with a joystick and change their view by sliding their finger on the screen. They also may interact with, switch, and throw held items using three buttons.
 
@@ -183,3 +183,18 @@ As we implemented the F2 requirements, we've been able to clarify our scope and 
 - **Scene-Based Raycasting**: Click interactions and object detection now only check the current active scene, preventing players from interacting with objects in rooms they cannot see.
 - **Inventory Transfer System**: When switching rooms, held items are properly removed from the old scene and added to the new scene, ensuring they remain visible and functional across room transitions.
 - **Input Management Fix**: Added mouse leave/blur detection to prevent infinite action loops when the cursor exits the window during mouse interactions.
+
+## F3 Devlog Entry - 12/4/2025
+
+### Start Menu Overlay
+
+- Implemented a screen overlay as a start menu and controls introduction manual to the game. When the game loads, the player first sees a dimmed background with “HOW TO PLAY” instructions and the “START GAME” button.
+- Overlay os built in HTML/CSS so it is able to be used on both desktop and mobile.
+
+### Continuous Inventory
+
+- **OxygenManager as a Continuous Resource**: Players have a "Oxygen" resource via an OxygenManager class that stores the player’s oxygen as a floating-point value (oxygenLevel) and a HUD reads directly from this manager and displays Oxygen Level: XX.XX.
+- **Oxygen Drain**: Oxygen drains it when the player is in a room where they cannot breathe and oxygen level is tracked and remembered accross all scenes/rooms. If oxygen reaches zero, the game end, so players are to manage their oxygen in order to explore and progress.
+- Players can use an oxygen tank or go to a safe room to restore oxygen. If oxygen reaches zero, the game ends, so players are to manage their oxygen in order to explore and progress.
+
+## F3 Team REFLECTION
