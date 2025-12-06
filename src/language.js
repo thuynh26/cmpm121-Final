@@ -12,6 +12,7 @@ const languages = {
         "Left-click: Interact with objects.",
         "Right-click drag: Look around.",
         "SPACE: Throw item.",
+        "Hold Oxygen Tank Item to replenish oxygen.",
       ],
       startButton: "START GAME",
       controlsText:
@@ -37,6 +38,7 @@ const languages = {
         "单击鼠标左键：与对象交互。",
         "右键单击拖动：环顾四周。",
         "空格：丢弃物品。",
+        "持有氧气罐物品以补充氧气",
       ],
       startButton: "开始游戏",
       controlsText:
@@ -47,6 +49,7 @@ const languages = {
       lossTitle: "失去！",
       lossBody: "你氧气耗尽了！",
       playAgain: "再玩一次",
+      fuelTypeLabel: "TEST",
     },
   },
 
@@ -61,6 +64,7 @@ const languages = {
         ".النقر بزر الماوس الأيسر: التفاعل مع الكائنات",
         ".انقر بزر الماوس الأيمن واسحب: انظر حولك",
         ".المسافة: رمي العنصر",
+        "امسك بحاوية الأكسجين لتجديد الأكسجين.",
       ],
       startButton: "ابدأ اللعبة",
       controlsText:
@@ -71,6 +75,7 @@ const languages = {
       lossTitle: "يخسر",
       lossBody: "لقد نفد منك الأكسجين",
       playAgain: "العب مرة أخرى",
+      fuelTypeLabel: "TEST 2",
     },
   },
 };
@@ -87,6 +92,10 @@ let _langButtonsEl = null;
 
 function getConfig() {
   return languages[currentLang];
+}
+
+export function getStrings() {
+  return getConfig().strings;
 }
 
 export function initI18n({ startOverlay, langText, startButton }) {

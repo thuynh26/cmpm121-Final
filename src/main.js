@@ -14,7 +14,7 @@ import {
 } from "./config/gameConstants.js";
 
 // F3: langauge changing
-import { initI18n } from "./language.js";
+import { getStrings, initI18n } from "./language.js";
 
 //============== START SCREEN & HUD ================//
 
@@ -288,17 +288,20 @@ export default function init() {
       metalness: 0.1,
     });
 
+    let canvas = document.createElement("canvas");
     //canvas and context for wall text
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#58586eff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 30px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("FUEL TYPE", canvas.width / 2, canvas.height / 2);
+    function createWallText(text) {
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#58586eff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 30px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
+      return canvas;
+    }
     // Create texture from canvas
     const texture = new lib.CanvasTexture(canvas);
     const wallWithTextMat = new MeshStandardMaterial({
@@ -306,6 +309,9 @@ export default function init() {
       roughness: 0.8,
       metalness: 0.1,
     });
+
+    const strings = getStrings();
+    canvas = createWallText(strings.fuelTypeLabel);
 
     const room1BackWall = new Mesh(room1BackWallGeo, room1BackWallMat);
     room1BackWall.position.set(0, 2.5, -5);
