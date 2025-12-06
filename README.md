@@ -197,4 +197,17 @@ As we implemented the F2 requirements, we've been able to clarify our scope and 
 - **Oxygen Drain**: Oxygen drains it when the player is in a room where they cannot breathe and oxygen level is tracked and remembered accross all scenes/rooms. If oxygen reaches zero, the game end, so players are to manage their oxygen in order to explore and progress.
 - Players can use an oxygen tank or go to a safe room to restore oxygen. If oxygen reaches zero, the game ends, so players are to manage their oxygen in order to explore and progress.
 
+## F3 Devlog Entry - 12/5/2025
+
+### Multiple Language Support
+
+- **Start Screen Language Selection**: Added 3 language buttons (English, Chinese, and Arabic) to the screen start overlay.
+- **Language Definitions**: Language strings are all in language.js inside a languages object with keys for English (en), Chinese (zr), and Arabic (ar). The initI18n function receives references to the start overlay, the “Select a Language” label, and the Start Game button that main.js creates. It then injects language buttons dynamically and wires them to setLanguage(langCode).
+- **DOM Updates**: updateInGameTexts replaces the text of DOM elements like controls-text, target-message, victory-title / victory-body, and loss-title/loss-body based on the selected language.
+
+### Visual Theme
+
+- Wired rendering and lighting configuration to respond to the user’s system theme so the game world visually reflects light vs. dark mode. On page load, the game reads the host environment’s preference (via CSS media queries and/or JS checks) and chooses between a “light theme” config and a “dark theme” config.
+- **Lighting and Background changes**: In light mode, the scene uses brighter lights, a light space background, and brighter/neutral material colors for walls and floors. In dark mode, there is lower ambient intensity, a darker space background, and adjusted directional/emissive lighting and scene colors.
+
 ## F3 Team REFLECTION
