@@ -11,6 +11,7 @@ export const Colors = {
   WALL_PURPLE: 0x8888aa,
   DOOR_BLUE: 0x3366ff,
   RED: 0xff0000,
+  LIGHT_RED: 0xFF7276,
   TARGET_RED: 0xf01b0c,
   YELLOW: 0xffff00,
   BLUE: 0x0000ff,
@@ -73,3 +74,6 @@ export const InventoryDisplay = {
 export const Renderer = {
   MAX_PIXEL_RATIO: 2,
 };
+
+export const darkThemePreference =
+  globalThis.matchMedia("(prefers-color-scheme: dark)").matches;

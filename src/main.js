@@ -5,6 +5,7 @@ import { InputManager } from "./systems/InputManager.js";
 import {
   Camera as CameraConfig,
   Colors,
+  darkThemePreference,
   InventoryDisplay,
   Lighting,
   Movement,
@@ -24,12 +25,16 @@ startOverlay.style.color = "white";
 startOverlay.style.zIndex = "10000";
 document.body.appendChild(startOverlay);
 
+const langText = document.createElement("div");
+langText.id = "lang-text";
+startOverlay.appendChild(langText);
+
 const startButton = document.createElement("button");
 startButton.id = "myButton";
 startOverlay.appendChild(startButton);
 
 // Initialize i18n
-initI18n({ startOverlay, startButton });
+initI18n({ startOverlay, langText, startButton });
 
 const playerHUD = document.createElement("div");
 playerHUD.id = "playerHUD";
@@ -72,6 +77,7 @@ startButton.addEventListener("click", () => {
   document.body.appendChild(playerHUD);
   playerOxygen.setOxygenLevel(100);
   playerHUD.appendChild(oxygenText);
+  console.log(darkThemePreference);
 });
 export default function init() {
   // Try to reuse a global THREE instance set by index.html.
@@ -196,22 +202,49 @@ export default function init() {
     let currentScene = scenes.room1;
 
     // Set background colors for each scene
-    scenes.room1.background = new Color(Colors.SKY_BLUE);
+
+    function backgroundTheme() {
+      if (darkThemePreference) {
+        return `${import.meta.env.BASE_URL}assets/spaceDark.png`;
+      } else {
+        return `${import.meta.env.BASE_URL}assets/space.png`;
+      }
+    }
+    const loaderBG = new lib.TextureLoader();
+    loaderBG.load(
+      backgroundTheme(),
+      (tex) => {
+        // ensure correct color space if available
+        if (lib.sRGBEncoding) tex.encoding = lib.sRGBEncoding;
+        scenes.room1.background = tex;
+      },
+      undefined,
+      (err) => console.error("Failed to load scene background:", err),
+    );
+    //nes.room1.background = "/assets/2k_stars_milky_way.jpg";
     scenes.room2.background = new Color(Colors.FOREST_GREEN);
     scenes.room3.background = new Color(Colors.GRAY);
+
+    function colorTheme() {
+      if (darkThemePreference) {
+        return Colors.LIGHT_RED;
+      } else {
+        return Colors.WHITE;
+      }
+    }
 
     // Add lighting to each scene
     function addLightingToScene(scene) {
       // Ambient light provides soft overall illumination
       const ambientLight = new AmbientLight(
-        Colors.WHITE,
+        colorTheme(),
         Lighting.AMBIENT_INTENSITY,
       );
       scene.add(ambientLight);
 
       // Directional light simulates sunlight
       const directionalLight = new DirectionalLight(
-        Colors.WHITE,
+        colorTheme(),
         Lighting.DIRECTIONAL_INTENSITY,
       );
       directionalLight.position.set(
@@ -248,6 +281,7 @@ export default function init() {
 
     // Back wall
     const room1BackWallGeo = new PlaneGeometry(10, 5);
+    const room1WindowTopGeo = new PlaneGeometry(10, 1.5);
     const room1BackWallMat = new MeshStandardMaterial({
       color: Colors.WALL_PURPLE,
       roughness: 0.8,
@@ -283,10 +317,14 @@ export default function init() {
     scenes.room1.add(room1LeftWall);
 
     // Right wall (mirror of left wall)
-    const room1RightWall = new Mesh(room1BackWallGeo, room1BackWallMat);
-    room1RightWall.position.set(5, 2.5, 0);
-    room1RightWall.rotation.y = Math.PI / -2;
-    scenes.room1.add(room1RightWall);
+    const room1RightWallTop = new Mesh(room1WindowTopGeo, room1BackWallMat);
+    room1RightWallTop.position.set(5, 0.75, 0);
+    room1RightWallTop.rotation.y = Math.PI / -2;
+    scenes.room1.add(room1RightWallTop);
+    const room1RightWallBottom = new Mesh(room1WindowTopGeo, room1BackWallMat);
+    room1RightWallBottom.position.set(5, 4.25, 0);
+    room1RightWallBottom.rotation.y = Math.PI / -2;
+    scenes.room1.add(room1RightWallBottom);
 
     // Ceiling
     const room1CeilingGeo = new PlaneGeometry(10, 10);
@@ -319,6 +357,33 @@ export default function init() {
     doorRoom1To2.position.set(0, 1.5, -4.9);
     ObjectHelpers.makeDoor(doorRoom1To2, "room2");
     scenes.room1.add(doorRoom1To2);
+
+    // Create clickable sphere with physics
+    const sphereGeometry = new SphereGeometry(0.5, 32, 32);
+    const sphereMaterial = new MeshStandardMaterial({
+      color: Colors.YELLOW,
+      emissive: Colors.EMISSIVE_YELLOW,
+      roughness: 0.3,
+      metalness: 0.7,
+    });
+
+    const clickableSphere = new Mesh(sphereGeometry, sphereMaterial);
+    clickableSphere.position.set(0, 2, 0); // Start above ground
+    clickableSphere.castShadow = true;
+    ObjectHelpers.makePickable(clickableSphere);
+    scenes.room1.add(clickableSphere);
+
+    // Add physics body for sphere
+    let sphereRigidBody = null;
+    if (physicsWorld) {
+      sphereRigidBody = new RigidBody();
+      sphereRigidBody.createSphere(5, { x: 0, y: 2, z: 0 }, 0.5);
+      sphereRigidBody.setFriction(PhysicsConfig.OBJECT_FRICTION);
+      sphereRigidBody.setRestitution(PhysicsConfig.SPHERE_RESTITUTION);
+      physicsWorld.addRigidBody(sphereRigidBody.body_);
+      rigidBodies.push({ mesh: clickableSphere, rigidBody: sphereRigidBody });
+      console.log("Sphere physics body added at y=2, mass=5");
+    }
 
     // =============== ROOM 2 =============== //
     // Add a simple grid so there's some visuals to see when loading the page.
@@ -500,7 +565,7 @@ export default function init() {
         // Apply material to all meshes in the loaded object
         redCube.traverse((child) => {
           if (child.isMesh) {
-            child.material = new MeshStandardMaterial({ color: Colors.RED });
+            child.material = new MeshStandardMaterial({ color: Colors.WHITE });
             child.castShadow = true;
             // Set userData on each child mesh so raycasting can detect it
             child.userData.objectType = ObjectType.PICKABLE;
@@ -510,7 +575,7 @@ export default function init() {
         });
 
         // Set initial position
-        redCube.position.set(-2, 5, 0);
+        redCube.position.set(-5, 5, 5);
         ObjectHelpers.makePickable(redCube); // Also set on parent
         scenes.room2.add(redCube);
 
@@ -533,9 +598,9 @@ export default function init() {
           const rbredCube = new RigidBody();
           // Physics box at desired spawn position
           rbredCube.createBox(10, {
-            x: -2,
+            x: -5,
             y: 5,
-            z: 0,
+            z: 5,
           }, {
             x: 0,
             y: 0,
@@ -598,9 +663,9 @@ export default function init() {
         });
 
         // Set initial position
-        oxCanister.position.set(-2, 5, 0);
+        oxCanister.position.set(8, 5, -7);
         ObjectHelpers.makePickable(oxCanister); // Also set on parent
-        scenes.room1.add(oxCanister);
+        scenes.room2.add(oxCanister);
 
         if (physicsWorld) {
           // Calculate bounding box from the actual model to get exact dimensions
@@ -621,9 +686,9 @@ export default function init() {
           const rboxCanister = new RigidBody();
           // Physics box at desired spawn position
           rboxCanister.createBox(10, {
-            x: -2,
+            x: 8,
             y: 5,
-            z: 0,
+            z: -7,
           }, {
             x: 0,
             y: 0,
@@ -660,33 +725,6 @@ export default function init() {
         console.error("Error loading OBJ model:", error);
       },
     );
-    // Create clickable sphere with physics
-    const sphereGeometry = new SphereGeometry(0.5, 32, 32);
-    const sphereMaterial = new MeshStandardMaterial({
-      color: Colors.YELLOW,
-      emissive: Colors.EMISSIVE_YELLOW,
-      roughness: 0.3,
-      metalness: 0.7,
-    });
-    //sphereMaterial.color = "0xff0000" ;
-
-    const clickableSphere = new Mesh(sphereGeometry, sphereMaterial);
-    clickableSphere.position.set(0, 2, 0); // Start above ground
-    clickableSphere.castShadow = true;
-    ObjectHelpers.makePickable(clickableSphere);
-    scenes.room2.add(clickableSphere);
-
-    // Add physics body for sphere
-    let sphereRigidBody = null;
-    if (physicsWorld) {
-      sphereRigidBody = new RigidBody();
-      sphereRigidBody.createSphere(5, { x: 0, y: 2, z: 0 }, 0.5);
-      sphereRigidBody.setFriction(PhysicsConfig.OBJECT_FRICTION);
-      sphereRigidBody.setRestitution(PhysicsConfig.SPHERE_RESTITUTION);
-      physicsWorld.addRigidBody(sphereRigidBody.body_);
-      rigidBodies.push({ mesh: clickableSphere, rigidBody: sphereRigidBody });
-      console.log("Sphere physics body added at y=2, mass=5");
-    }
 
     // =============== ROOM 3 =============== //
     // Add a simple grid so there's some visuals to see when loading the page.
@@ -1010,7 +1048,7 @@ export default function init() {
           const currentItem = inventory.heldItems[inventory.currentItemIndex];
           if (
             (currentItem.mesh == redCube) ||
-            (currentItem.mesh == sphereMaterial)
+            (currentItem.mesh == clickableSphere)
           ) {
             MeshHelpers.setColor(currentItem.mesh, newColor);
             console.log(
